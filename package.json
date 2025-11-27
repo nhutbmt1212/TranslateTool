@@ -1,0 +1,70 @@
+{
+  "name": "translate-tool",
+  "version": "1.0.0",
+  "description": "Ứng dụng dịch thuật desktop bằng TypeScript",
+  "main": "dist-electron/electron/main.js",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build && electron-builder",
+    "build:electron": "tsc -p tsconfig.translator.json && tsc -p tsconfig.electron.json && vite build",
+    "preview": "vite preview",
+    "electron:dev": "concurrently \"npm run dev\" \"tsc -p tsconfig.translator.json --watch\" \"tsc -p tsconfig.electron.json --watch\" \"wait-on http://localhost:5173 && electron .\"",
+    "electron:build": "npm run build:electron && electron-builder",
+    "cli:build": "tsc -p tsconfig.cli.json",
+    "cli:dev": "tsx src/cli/index.ts",
+    "cli:start": "node dist-cli/index.js"
+  },
+  "keywords": [
+    "translate",
+    "translation",
+    "typescript",
+    "electron",
+    "desktop"
+  ],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/node": "^20.10.0",
+    "@types/react": "^18.2.43",
+    "@types/react-dom": "^18.2.17",
+    "@vitejs/plugin-react": "^4.2.1",
+    "concurrently": "^8.2.2",
+    "electron": "^28.0.0",
+    "electron-builder": "^24.9.1",
+    "tsx": "^4.7.0",
+    "typescript": "^5.3.3",
+    "vite": "^5.0.8",
+    "wait-on": "^7.2.0"
+  },
+  "dependencies": {
+    "@vitalets/google-translate-api": "^9.2.1",
+    "chalk": "^5.3.0",
+    "commander": "^11.1.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
+  },
+  "build": {
+    "appId": "com.translatetool.app",
+    "productName": "Translate Tool",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "dist-electron/**/*",
+      "dist/**/*"
+    ],
+    "win": {
+      "target": "nsis",
+      "icon": "assets/icon.ico"
+    },
+    "mac": {
+      "target": "dmg",
+      "icon": "assets/icon.icns"
+    },
+    "linux": {
+      "target": "AppImage",
+      "icon": "assets/icon.png"
+    }
+  }
+}

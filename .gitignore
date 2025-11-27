@@ -1,0 +1,12 @@
+node_modules/
+dist/
+dist-electron/
+dist-cli/
+release/
+*.log
+.DS_Store
+.env
+*.tsbuildinfo
+.vite/
+*.local
+
