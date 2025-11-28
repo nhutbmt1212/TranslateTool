@@ -1,10 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import languagesMetadata from './data/languages.json';
 import HeaderBar from '././components/HeaderBar';
 import SourcePanel from '././components/SourcePanel';
 import TargetPanel from '././components/TargetPanel';
 import LanguagePickerModal from '././components/LanguagePickerModal';
-import { Languages } from './types/languages';
+import { Languages, LanguageMetadata } from './types/languages';
+import { uiLanguageOptions } from './i18n';
 
 interface TranslationResult {
   text: string;
@@ -13,17 +15,11 @@ interface TranslationResult {
   originalText: string;
 }
 
-type LanguageMetadata = {
-  code: string;
-  nameEn: string;
-  nameNative: string;
-};
-
 const fallbackLanguages = (languagesMetadata as LanguageMetadata[]).reduce<Languages>(
   (acc, lang) => {
     const displayName =
       lang.nameNative && lang.nameNative !== lang.nameEn
-        ? `${lang.nameEn}`
+        ? `${lang.nameEn} (${lang.nameNative})`
         : lang.nameEn;
     acc[lang.code] = displayName;
     return acc;
@@ -53,6 +49,7 @@ declare global {
 }
 
 const App: React.FC = () => {   
+  const { t, i18n } = useTranslation();
   const [inputText, setInputText] = useState('');
   const [outputText, setOutputText] = useState('');
   const [sourceLang, setSourceLang] = useState('auto');
@@ -71,28 +68,28 @@ const App: React.FC = () => {
   const outputChars = outputText.length;
 
   useEffect(() => {
-    loadLanguages();
-  }, []);
-
-  const loadLanguages = async () => {
     const api = window.electronAPI;
     if (!api?.getLanguages) {
       setLanguages(fallbackLanguages);
       return;
     }
 
-    try {
-      const langs = await api.getLanguages();
-      if (langs && Object.keys(langs).length > 0) {
-        setLanguages(langs);
-      } else {
+    const load = async () => {
+      try {
+        const langs = await api.getLanguages();
+        if (langs && Object.keys(langs).length > 0) {
+          setLanguages(langs);
+        } else {
+          setLanguages(fallbackLanguages);
+        }
+      } catch (err) {
+        console.error('Unable to load language list', err);
         setLanguages(fallbackLanguages);
       }
-    } catch (err) {
-      console.error('Lỗi khi tải danh sách ngôn ngữ:', err);
-      setLanguages(fallbackLanguages);
-    }
-  };
+    };
+
+    load();
+  }, []);
 
   const translateWithGemini = async (
     text: string,
@@ -102,7 +99,7 @@ const App: React.FC = () => {
   ): Promise<{ translatedText: string; detectedLang: string }> => {
     const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY?.trim();
     if (!GEMINI_API_KEY) {
-      throw new Error('Thiếu VITE_GEMINI_API_KEY trong file .env');
+      throw new Error(t('errors.missingGeminiKey'));
     }
 
     const GEMINI_MODEL = 'gemini-2.5-flash-lite';
@@ -136,7 +133,7 @@ Văn bản:
 
     if (!response.ok) {
       const error = await response.json().catch(() => undefined);
-      throw new Error(error?.error?.message || 'Lỗi khi gọi Gemini API (dịch)');
+      throw new Error(error?.error?.message || t('errors.translationRequestFailed'));
     }
 
     const data = await response.json();
@@ -146,7 +143,7 @@ Văn bản:
       .trim();
 
     if (!rawText) {
-      throw new Error('Không nhận được phản hồi từ Gemini');
+      throw new Error(t('errors.noResponse'));
     }
 
     const cleaned = rawText.replace(/```json|```/g, '').trim();
@@ -154,11 +151,11 @@ Văn bản:
     try {
       parsed = JSON.parse(cleaned);
     } catch (err) {
-      throw new Error('Phản hồi Gemini không đúng định dạng JSON yêu cầu');
+      throw new Error(t('errors.invalidTranslationResponse'));
     }
 
     if (!parsed.translatedText) {
-      throw new Error('Gemini không trả về bản dịch');
+      throw new Error(t('errors.noTranslationOutput'));
     }
 
     return {
@@ -169,7 +166,7 @@ Văn bản:
 
   const handleTranslate = async () => {
     if (!inputText.trim()) {
-      setError('Vui lòng nhập văn bản cần dịch');
+      setError(t('errors.inputRequired'));
       return;
     }
 
@@ -196,7 +193,7 @@ Văn bản:
         }
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Lỗi không xác định');
+      setError(err instanceof Error ? err.message : t('errors.unknown'));
     } finally {
       setIsTranslating(false);
     }
@@ -227,7 +224,7 @@ Văn bản:
 
     // Kiểm tra định dạng file
     if (!file.type.startsWith('image/')) {
-      setError('Vui lòng chọn file ảnh hợp lệ');
+      setError(t('errors.invalidImageFile'));
       return;
     }
 
@@ -256,10 +253,10 @@ Văn bản:
           handleTranslate();
         }, 100);
       } else {
-        setError('Không tìm thấy văn bản trong hình ảnh');
+        setError(t('errors.noTextFoundInImage'));
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Lỗi khi nhận diện văn bản');
+      setError(err instanceof Error ? err.message : t('errors.ocrFailure'));
     } finally {
       setIsProcessingOCR(false);
       // Reset file input
@@ -277,7 +274,7 @@ Văn bản:
   const recognizeWithGemini = async (file: File): Promise<string> => {
     const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY?.trim();
     if (!GEMINI_API_KEY) {
-      throw new Error('Thiếu VITE_GEMINI_API_KEY trong file .env');
+      throw new Error(t('errors.missingGeminiKey'));
     }
 
     // Chuyển file thành base64
@@ -327,7 +324,7 @@ Văn bản:
 
     if (!response.ok) {
       const error = await response.json();
-      throw new Error(error.error?.message || 'Lỗi khi gọi Gemini API');
+      throw new Error(error.error?.message || t('errors.translationRequestFailed'));
     }
 
     const data = await response.json();
@@ -340,118 +337,148 @@ Văn bản:
     return text.trim();
   };
 
+  const translateButtonLabel = isProcessingOCR
+    ? `🔍 ${t('status.ocrInProgress')}`
+    : isTranslating
+    ? `🔄 ${t('status.translating')}`
+    : `✨ ${t('buttons.translate')}`;
+
+  const handleUiLanguageChange = (code: string) => {
+    i18n.changeLanguage(code);
+  };
+
+  const resolvedLanguage = i18n.resolvedLanguage || i18n.language || 'en';
+  const currentUiLanguage = resolvedLanguage.split('-')[0];
+  const sourceLabel =
+    sourceLang === 'auto' ? t('source.autoDetect') : languages[sourceLang] || sourceLang.toUpperCase();
+  const targetLabel = languages[targetLang] || targetLang.toUpperCase();
 
   return (
-    <div className="app">
-      <HeaderBar
-        onOpenLanguagePicker={() => {
-          setLanguagePickerMode('source');
-          setLanguagePickerOpen(true);
-        }}
-      />
+    <div className="app-shell">
+      <div className="orb orb-one" aria-hidden="true" />
+      <div className="orb orb-two" aria-hidden="true" />
+      <div className="grid-overlay" aria-hidden="true" />
+      <div className="app-surface">
+        <HeaderBar
+          onOpenLanguagePicker={() => {
+            setLanguagePickerMode('source');
+            setLanguagePickerOpen(true);
+          }}
+          uiLanguageOptions={uiLanguageOptions}
+          currentUiLanguage={currentUiLanguage}
+          onUiLanguageChange={handleUiLanguageChange}
+        />
 
-      <main className="main-content">
-        <div className="translation-container">
-          {/* Input Section */}
-          <SourcePanel
-            sourceLang={sourceLang}
-            targetLang={targetLang}
-            languages={languages}
-            inputText={inputText}
-            isProcessingOCR={isProcessingOCR}
-            charCount={inputChars}
-            fileInputRef={fileInputRef}
-            onSourceLangChange={setSourceLang}
-            onInputTextChange={setInputText}
-            onCaptureClick={handleCaptureClick}
-            onImageSelect={handleImageSelect}
-            onCopy={() => handleCopy(inputText)}
-          />
+        <main className="main-content">
+          <section className="translation-section">
+            <SourcePanel
+              sourceLang={sourceLang}
+              targetLang={targetLang}
+              languages={languages}
+              inputText={inputText}
+              detectedLang={detectedLang}
+              isProcessingOCR={isProcessingOCR}
+              charCount={inputChars}
+              fileInputRef={fileInputRef}
+              onSourceLangChange={setSourceLang}
+              onInputTextChange={setInputText}
+              onCaptureClick={handleCaptureClick}
+              onImageSelect={handleImageSelect}
+              onCopy={() => handleCopy(inputText)}
+            />
 
-          {/* Swap Button */}
-          <div className="swap-container">
+            <div className="swap-panel">
+              <button
+                type="button"
+                className="swap-button"
+                onClick={handleSwapLanguages}
+                title={t('buttons.swapLanguages')}
+                aria-label={t('buttons.swapLanguages')}
+                disabled={!inputText || !outputText}
+              >
+                ⇆
+              </button>
+            </div>
+
+            <TargetPanel
+              targetLang={targetLang}
+              sourceLang={sourceLang}
+              languages={languages}
+              outputText={outputText}
+              charCount={outputChars}
+              onTargetLangChange={setTargetLang}
+              onCopy={() => handleCopy(outputText)}
+            />
+          </section>
+
+          {imagePreview && (
+            <div className="image-preview-container">
+              <img src={imagePreview} alt="Preview" className="image-preview" />
+              <button
+                type="button"
+                className="close-preview-button"
+                onClick={() => {
+                  setImagePreview(null);
+                  if (fileInputRef.current) {
+                    fileInputRef.current.value = '';
+                  }
+                }}
+              >
+                ✕
+              </button>
+            </div>
+          )}
+
+          <section className="action-bar">
+            <div className="stat-group">
+              <div className="stat-chip">
+                <span>{t('languagePicker.tabSource')}</span>
+                <strong>{t('general.characters', { count: inputChars })}</strong>
+              </div>
+              <div className="stat-chip">
+                <span>{t('languagePicker.tabTarget')}</span>
+                <strong>{t('general.characters', { count: outputChars })}</strong>
+              </div>
+            </div>
             <button
-              className="swap-button"
-              onClick={handleSwapLanguages}
-              title="Đổi ngôn ngữ"
-              disabled={!inputText || !outputText}
+              type="button"
+              className="translate-button"
+              onClick={handleTranslate}
+              disabled={isTranslating || isProcessingOCR || !inputText.trim()}
             >
-              ⇅
+              {translateButtonLabel}
             </button>
-          </div>
+          </section>
 
-          {/* Output Section */}
-          <TargetPanel
-            targetLang={targetLang}
-            sourceLang={sourceLang}
-            languages={languages}
-            outputText={outputText}
-            charCount={outputChars}
-            onTargetLangChange={setTargetLang}
-            onCopy={() => handleCopy(outputText)}
-          />
-        </div>
-
-        {/* Image Preview */}
-        {imagePreview && (
-          <div className="image-preview-container">
-            <img src={imagePreview} alt="Preview" className="image-preview" />
-            <button
-              className="close-preview-button"
-              onClick={() => {
-                setImagePreview(null);
-                if (fileInputRef.current) {
-                  fileInputRef.current.value = '';
-                }
-              }}
-            >
-              ✕
-            </button>
-          </div>
-        )}
-
-        {/* Translate Button */}
-        <button
-          className="translate-button"
-          onClick={handleTranslate}
-          disabled={isTranslating || isProcessingOCR || !inputText.trim()}
-        >
-          {isProcessingOCR
-            ? '🔍 Đang nhận diện văn bản...'
-            : isTranslating
-            ? '🔄 Đang dịch...'
-            : '✨ Dịch'}
-        </button>
-
-        {/* Error Message */}
-        {error && (
-          <div className="error-message">
-            ❌ {error}
-          </div>
-        )}
-      </main>
-      <LanguagePickerModal
-        open={languagePickerOpen}
-        mode={languagePickerMode}
-        languages={languages}
-        sourceLang={sourceLang}
-        targetLang={targetLang}
-        onClose={() => setLanguagePickerOpen(false)}
-        onModeChange={setLanguagePickerMode}
-        onSelectSource={(code: string) => {
-          setSourceLang(code);
-          if (code === targetLang) {
-            const alternative = Object.keys(languages).find((lang) => lang !== code) || 'en';
-            setTargetLang(alternative);
-          }
-        }}
-        onSelectTarget={(code: string) => {
-          setTargetLang(code);
-          if (sourceLang === code) {
-            setSourceLang('auto');
-          }
-        }}
-      />
+          {error && (
+            <div className="error-banner" role="alert">
+              ❌ {error}
+            </div>
+          )}
+        </main>
+        <LanguagePickerModal
+          open={languagePickerOpen}
+          mode={languagePickerMode}
+          languages={languages}
+          sourceLang={sourceLang}
+          targetLang={targetLang}
+          onClose={() => setLanguagePickerOpen(false)}
+          onModeChange={setLanguagePickerMode}
+          onSelectSource={(code: string) => {
+            setSourceLang(code);
+            if (code === targetLang) {
+              const alternative = Object.keys(languages).find((lang) => lang !== code) || 'en';
+              setTargetLang(alternative);
+            }
+          }}
+          onSelectTarget={(code: string) => {
+            setTargetLang(code);
+            if (sourceLang === code) {
+              setSourceLang('auto');
+            }
+          }}
+        />
+      </div>
     </div>
   );
 };

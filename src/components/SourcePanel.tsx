@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { Languages } from '../types/languages';
 
 interface SourcePanelProps {
@@ -6,6 +7,7 @@ interface SourcePanelProps {
   targetLang: string;
   languages: Languages;
   inputText: string;
+  detectedLang: string;
   isProcessingOCR: boolean;
   charCount: number;
   fileInputRef: React.RefObject<HTMLInputElement>;
@@ -21,6 +23,7 @@ const SourcePanel: React.FC<SourcePanelProps> = ({
   targetLang,
   languages,
   inputText,
+  detectedLang,
   isProcessingOCR,
   charCount,
   fileInputRef,
@@ -30,35 +33,48 @@ const SourcePanel: React.FC<SourcePanelProps> = ({
   onImageSelect,
   onCopy,
 }) => {
+  const { t } = useTranslation();
+
+  const detectedLabel =
+    sourceLang === 'auto' && detectedLang !== 'auto'
+      ? languages[detectedLang] || detectedLang.toUpperCase()
+      : null;
+
   return (
-    <div className="translation-box">
-      <div className="box-header">
+    <div className="translation-box source-box">
+      <div className="panel-top simple-panel-header">
         <select
           value={sourceLang}
           onChange={(e) => onSourceLangChange(e.target.value)}
-          className="lang-select"
+          className="lang-select simple-select"
         >
-          <option value="auto">Tự động phát hiện</option>
+          <option value="auto">{t('source.autoDetect')}</option>
           {Object.entries(languages).map(([code, name]) => (
             <option key={code} value={code} disabled={code === targetLang}>
               {name}
             </option>
           ))}
         </select>
+        {detectedLabel && (
+          <span className="detected-chip simple-detected">
+            {t('source.autoDetect')}: {detectedLabel}
+          </span>
+        )}
       </div>
       <textarea
-        className="text-input"
-        placeholder="Nhập văn bản cần dịch....."
+        className="text-input simple-textarea"
+        placeholder={t('source.placeholder') ?? ''}
         value={inputText}
         onChange={(e) => onInputTextChange(e.target.value)}
         rows={8}
       />
-      <div className="box-footer">
+      <div className="box-footer simple-footer">
         <div className="footer-left">
           <button
-            className="icon-button"
+            type="button"
+            className="icon-button simple-icon-button"
             onClick={onCaptureClick}
-            title="Chụp/Chọn ảnh để dịch"
+            title={t('source.captureTitle') ?? undefined}
             disabled={isProcessingOCR}
           >
             📷
@@ -71,15 +87,18 @@ const SourcePanel: React.FC<SourcePanelProps> = ({
             style={{ display: 'none' }}
           />
           <button
-            className="icon-button"
+            type="button"
+            className="icon-button simple-icon-button"
             onClick={onCopy}
-            title="Sao chép"
+            title={t('buttons.copy') ?? undefined}
             disabled={!inputText}
           >
             📋
           </button>
         </div>
-        <span className="char-count">{charCount} ký tự</span>
+        <span className="char-count simple-char-count">
+          {t('general.characters', { count: charCount })}
+        </span>
       </div>
     </div>
   );

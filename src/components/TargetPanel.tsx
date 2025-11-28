@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { Languages } from '../types/languages';
 
 interface TargetPanelProps {
@@ -20,13 +21,15 @@ const TargetPanel: React.FC<TargetPanelProps> = ({
   onTargetLangChange,
   onCopy,
 }) => {
+  const { t } = useTranslation();
+
   return (
-    <div className="translation-box">
-      <div className="box-header">
+    <div className="translation-box target-box">
+      <div className="panel-top simple-panel-header">
         <select
           value={targetLang}
           onChange={(e) => onTargetLangChange(e.target.value)}
-          className="lang-select"
+          className="lang-select simple-select"
         >
           {Object.entries(languages).map(([code, name]) => (
             <option key={code} value={code} disabled={sourceLang !== 'auto' && code === sourceLang}>
@@ -36,22 +39,25 @@ const TargetPanel: React.FC<TargetPanelProps> = ({
         </select>
       </div>
       <textarea
-        className="text-output"
-        placeholder="Bản dịch sẽ hiển thị ở đây..."
+        className="text-output simple-textarea"
+        placeholder={t('target.placeholder') ?? ''}
         value={outputText}
         readOnly
         rows={8}
       />
-      <div className="box-footer">
+      <div className="box-footer target-footer simple-footer">
         <button
-          className="icon-button"
+          type="button"
+          className="icon-button simple-icon-button"
           onClick={onCopy}
-          title="Sao chép"
+          title={t('buttons.copy') ?? undefined}
           disabled={!outputText}
         >
           📋
         </button>
-        <span className="char-count">{charCount} ký tự</span>
+        <span className="char-count simple-char-count">
+          {t('general.characters', { count: charCount })}
+        </span>
       </div>
     </div>
   );

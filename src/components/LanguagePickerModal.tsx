@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { Languages } from '../types/languages';
 
 type PickerMode = 'source' | 'target';
@@ -26,6 +27,8 @@ const LanguagePickerModal: React.FC<LanguagePickerModalProps> = ({
   onSelectSource,
   onSelectTarget,
 }) => {
+  const { t } = useTranslation();
+
   if (!open) return null;
 
   const handleSelect = (code: string) => {
@@ -44,17 +47,22 @@ const LanguagePickerModal: React.FC<LanguagePickerModalProps> = ({
     return sourceLang !== 'auto' && code === sourceLang;
   };
 
+  const titleKey = mode === 'source' ? 'languagePicker.titleSource' : 'languagePicker.titleTarget';
+
   return (
     <div className="language-picker-overlay" onClick={onClose}>
       <div className="language-picker" onClick={(e) => e.stopPropagation()}>
         <div className="picker-header">
-          <h3>Chọn ngôn ngữ {mode === 'source' ? 'nguồn' : 'đích'}</h3>
+          <div>
+            <p className="picker-eyebrow">{t('languagePicker.eyebrow')}</p>
+            <h3>{t(titleKey)}</h3>
+          </div>
           <div className="picker-actions">
             <button className={mode === 'source' ? 'active' : ''} onClick={() => onModeChange('source')}>
-              Nguồn
+              {t('languagePicker.tabSource')}
             </button>
             <button className={mode === 'target' ? 'active' : ''} onClick={() => onModeChange('target')}>
-              Đích
+              {t('languagePicker.tabTarget')}
             </button>
           </div>
         </div>
@@ -62,7 +70,7 @@ const LanguagePickerModal: React.FC<LanguagePickerModalProps> = ({
           {Object.entries(languages).map(([code, name]) => (
             <button
               key={code}
-              className="language-item"
+              className={`language-item${isDisabled(code) ? ' disabled' : ''}`}
               onClick={() => handleSelect(code)}
               disabled={isDisabled(code)}
             >
