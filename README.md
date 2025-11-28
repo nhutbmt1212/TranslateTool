@@ -72,6 +72,13 @@ Sau khi build, file cài đặt sẽ nằm trong thư mục `release/`.
 - Ứng dụng sẽ tự động gửi 5 yêu cầu OCR đến Gemini để kiểm tra giới hạn/throttle
 - Bạn có thể tùy chỉnh logic trong `handleTestLimit` nếu muốn số lần khác
 
+#### Chụp màn hình như Snipping Tool
+
+- Nhấn **“Dùng ảnh mẫu Robinquill”** để test nhanh bằng ảnh cố định trong `src/assets`.
+- Nhấn **“Chụp màn hình (Snipping)”**:
+  - Ưu tiên gọi trực tiếp Snipping Tool của Windows (`ms-screenclip:`). Sau khi bạn chọn vùng, ảnh trong clipboard sẽ được OCR và dịch tự động.
+  - Nếu Snipping Tool không khả dụng, app sẽ fallback về `desktopCapturer`/`getDisplayMedia` để vẫn có thể chụp màn hình.
+
 ### 💻 CLI Tool
 
 #### Dịch văn bản đơn giản:

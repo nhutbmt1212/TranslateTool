@@ -27,25 +27,29 @@ function createWindow() {
     autoHideMenuBar: true, // Ẩn thanh menu bar
   });
 
-  // Load app
+  const window = mainWindow;
+  if (!window) {
+    return;
+  }
+
   const isDev = process.env.NODE_ENV === 'development' || !app.isPackaged;
   if (isDev) {
-    mainWindow.loadURL('http://localhost:5173');
+    window.loadURL('http://localhost:5173');
     // Chỉ mở DevTools khi có biến môi trường DEBUG
     // Bạn có thể mở DevTools thủ công bằng Ctrl+Shift+I hoặc F12
-    // mainWindow.webContents.openDevTools();
+    // window.webContents.openDevTools();
   } else {
-    mainWindow.loadFile(join(__dirname, '../dist/index.html'));
+    window.loadFile(join(__dirname, '../dist/index.html'));
   }
 
   // Ẩn menu bar hoàn toàn
-  mainWindow.setMenuBarVisibility(false);
+  window.setMenuBarVisibility(false);
 
-  mainWindow.once('ready-to-show', () => {
-    mainWindow?.show();
+  window.once('ready-to-show', () => {
+    window.show();
   });
 
-  mainWindow.on('closed', () => {
+  window.on('closed', () => {
     mainWindow = null;
   });
 }
@@ -82,4 +86,3 @@ ipcMain.handle('translate', async (_event: any, text: string, targetLang: string
 ipcMain.handle('get-languages', async () => {
   return translator.getSupportedLanguages();
 });
-

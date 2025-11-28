@@ -1,4 +1,51 @@
 import { translate as googleTranslate } from '@vitalets/google-translate-api';
+import { readFileSync, existsSync } from 'fs';
+import { fileURLToPath } from 'url';
+import { dirname, join } from 'path';
+import { log } from 'console';
+
+type LanguageMetadata = {
+  code: string;
+  nameEn: string;
+  nameNative: string;
+};
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+const resolveLanguagesPath = () => {
+  const candidatePaths = [
+    join(__dirname, 'data/languages.json'),
+    join(__dirname, '../../src/data/languages.json'),
+  ];
+
+  console.log(candidatePaths);
+  
+
+  for (const candidate of candidatePaths) {
+    if (existsSync(candidate)) {
+      return candidate;
+    }
+  }
+
+  throw new Error('Không tìm thấy file danh sách ngôn ngữ');
+};
+
+const languagesPath = resolveLanguagesPath();
+const languagesData = JSON.parse(
+  readFileSync(languagesPath, { encoding: 'utf-8' })
+) as LanguageMetadata[];
+
+const supportedLanguages = languagesData.reduce(
+  (acc, lang) => {
+    const displayName =
+      lang.nameNative && lang.nameNative !== lang.nameEn
+        ? `${lang.nameNative} / ${lang.nameEn}`
+        : lang.nameEn;
+    acc[lang.code] = displayName;
+    return acc;
+  },
+  {} as Record<string, string>
+);
 
 export interface TranslationResult {
   text: string;
@@ -77,22 +124,9 @@ export class Translator {
    * Lấy danh sách các ngôn ngữ được hỗ trợ
    */
   getSupportedLanguages(): Record<string, string> {
-    return {
-      'vi': 'Tiếng Việt',
-      'en': 'English',
-      'zh': '中文',
-      'ja': '日本語',
-      'ko': '한국어',
-      'fr': 'Français',
-      'de': 'Deutsch',
-      'es': 'Español',
-      'pt': 'Português',
-      'ru': 'Русский',
-      'ar': 'العربية',
-      'th': 'ไทย',
-      'id': 'Bahasa Indonesia',
-      'ms': 'Bahasa Melayu',
-    };
+    return supportedLanguages;
   }
+ 
+  
 }
 

@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import sampleImageUrl from './assets/Screenshot 2025-11-26 202920.png';
+import languagesMetadata from './data/languages.json';
 
 interface TranslationResult {
   text: string;
@@ -12,7 +13,23 @@ interface Languages {
   [key: string]: string;
 }
 
-const DEFAULT_TEST_CALLS = 5;
+type LanguageMetadata = {
+  code: string;
+  nameEn: string;
+  nameNative: string;
+};
+
+const fallbackLanguages = (languagesMetadata as LanguageMetadata[]).reduce<Languages>(
+  (acc, lang) => {
+    const displayName =
+      lang.nameNative && lang.nameNative !== lang.nameEn
+        ? `${lang.nameEn}`
+        : lang.nameEn;
+    acc[lang.code] = displayName;
+    return acc;
+  },
+  {}
+);
 
 const convertFileToBase64 = (file: File): Promise<string> =>
   new Promise((resolve, reject) => {
@@ -21,18 +38,6 @@ const convertFileToBase64 = (file: File): Promise<string> =>
     reader.onerror = reject;
     reader.readAsDataURL(file);
   });
-
-const dataUrlToFile = (dataUrl: string, filename: string): File => {
-  const [metadata, base64] = dataUrl.split(',');
-  const mimeMatch = metadata.match(/data:(.*?);/);
-  const mime = mimeMatch ? mimeMatch[1] : 'image/png';
-  const binary = atob(base64);
-  const array = new Uint8Array(binary.length);
-  for (let i = 0; i < binary.length; i++) {
-    array[i] = binary.charCodeAt(i);
-  }
-  return new File([array], filename, { type: mime });
-};
 
 const fetchSampleImageFile = async (): Promise<File> => {
   const response = await fetch(sampleImageUrl);
@@ -44,7 +49,7 @@ const fetchSampleImageFile = async (): Promise<File> => {
 
 declare global {
   interface Window {
-    electronAPI: {
+    electronAPI?: {
       translate: (text: string, targetLang: string, sourceLang?: string) => Promise<{
         success: boolean;
         data?: TranslationResult;
@@ -55,38 +60,51 @@ declare global {
   }
 }
 
-const App: React.FC = () => {
+const App: React.FC = () => {   
   const [inputText, setInputText] = useState('');
   const [outputText, setOutputText] = useState('');
   const [sourceLang, setSourceLang] = useState('auto');
   const [targetLang, setTargetLang] = useState('en');
   const [detectedLang, setDetectedLang] = useState('auto');
-  const [languages, setLanguages] = useState<Languages>({});
+  const [languages, setLanguages] = useState<Languages>(fallbackLanguages);
   const [isTranslating, setIsTranslating] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isProcessingOCR, setIsProcessingOCR] = useState(false);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
-  const [lastImageBase64, setLastImageBase64] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [isTestingLimit, setIsTestingLimit] = useState(false);
-  const [testProgress, setTestProgress] = useState(0);
 
   useEffect(() => {
     loadLanguages();
   }, []);
 
   const loadLanguages = async () => {
+    const api = window.electronAPI;
+    if (!api?.getLanguages) {
+      setLanguages(fallbackLanguages);
+      return;
+    }
+
     try {
-      const langs = await window.electronAPI.getLanguages();
-      setLanguages(langs);
+      const langs = await api.getLanguages();
+      if (langs && Object.keys(langs).length > 0) {
+        setLanguages(langs);
+      } else {
+        setLanguages(fallbackLanguages);
+      }
     } catch (err) {
       console.error('Lỗi khi tải danh sách ngôn ngữ:', err);
+      setLanguages(fallbackLanguages);
     }
   };
 
   const handleTranslate = async () => {
     if (!inputText.trim()) {
       setError('Vui lòng nhập văn bản cần dịch');
+      return;
+    }
+
+    if (!window.electronAPI?.translate) {
+      setError('Electron API không khả dụng. Vui lòng chạy ứng dụng bằng Electron.');
       return;
     }
 
@@ -146,7 +164,6 @@ const App: React.FC = () => {
     // Hiển thị preview
     const base64DataUrl = await convertFileToBase64(file);
     setImagePreview(base64DataUrl);
-    setLastImageBase64(base64DataUrl);
 
     // Xử lý OCR
     setIsProcessingOCR(true);
@@ -193,7 +210,6 @@ const App: React.FC = () => {
       const sampleFile = await fetchSampleImageFile();
       const base64DataUrl = await convertFileToBase64(sampleFile);
       setImagePreview(base64DataUrl);
-      setLastImageBase64(base64DataUrl);
 
       const text = await recognizeWithGemini(sampleFile);
       const cleanedText = text.trim();
@@ -209,31 +225,6 @@ const App: React.FC = () => {
       setError(err instanceof Error ? err.message : 'Lỗi khi xử lý ảnh mẫu');
     } finally {
       setIsProcessingOCR(false);
-    }
-  };
-
-  const createTestImageFile = async (): Promise<File> => {
-    if (lastImageBase64) {
-      return dataUrlToFile(lastImageBase64, `test-${Date.now()}.png`);
-    }
-    return fetchSampleImageFile();
-  };
-
-  const handleTestLimit = async (times: number = DEFAULT_TEST_CALLS) => {
-    setIsTestingLimit(true);
-    setTestProgress(0);
-    setError(null);
-    try {
-      for (let i = 0; i < times; i++) {
-        const testFile = await createTestImageFile();
-        await recognizeWithGemini(testFile);
-        setTestProgress(i + 1);
-        await new Promise((resolve) => setTimeout(resolve, 300));
-      }
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Lỗi khi test giới hạn API');
-    } finally {
-      setIsTestingLimit(false);
     }
   };
 
@@ -328,7 +319,7 @@ const App: React.FC = () => {
                 <option value="auto">Tự động phát hiện</option>
                 {Object.entries(languages).map(([code, name]) => (
                   <option key={code} value={code}>
-                    {name} ({code})
+                    {name}
                   </option>
                 ))}
               </select>
@@ -395,7 +386,7 @@ const App: React.FC = () => {
               >
                 {Object.entries(languages).map(([code, name]) => (
                   <option key={code} value={code}>
-                    {name} ({code})
+                    {name}
                   </option>
                 ))}
               </select>
@@ -460,23 +451,6 @@ const App: React.FC = () => {
         >
           {isProcessingOCR ? '🖼️ Đang xử lý ảnh mẫu...' : '🖼️ Dùng ảnh mẫu Robinquill'}
         </button>
-
-        {/* Test API Limit Button */}
-        <button
-          className="test-button"
-          onClick={() => handleTestLimit()}
-          disabled={isTestingLimit || isProcessingOCR || isTranslating}
-        >
-          {isTestingLimit
-            ? `🚀 Đang test (${testProgress}/${DEFAULT_TEST_CALLS})`
-            : `🚀 Test API limit (${DEFAULT_TEST_CALLS} calls)`}
-        </button>
-
-        {isTestingLimit && (
-          <div className="test-status">
-            Đang gửi yêu cầu {testProgress}/{DEFAULT_TEST_CALLS}...
-          </div>
-        )}
 
         {/* Error Message */}
         {error && (
