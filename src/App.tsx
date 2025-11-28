@@ -1,15 +1,16 @@
 import React, { useState, useEffect, useRef } from 'react';
 import languagesMetadata from './data/languages.json';
+import HeaderBar from '././components/HeaderBar';
+import SourcePanel from '././components/SourcePanel';
+import TargetPanel from '././components/TargetPanel';
+import LanguagePickerModal from '././components/LanguagePickerModal';
+import { Languages } from './types/languages';
 
 interface TranslationResult {
   text: string;
   from: string;
   to: string;
   originalText: string;
-}
-
-interface Languages {
-  [key: string]: string;
 }
 
 type LanguageMetadata = {
@@ -65,44 +66,9 @@ const App: React.FC = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [languagePickerOpen, setLanguagePickerOpen] = useState(false);
   const [languagePickerMode, setLanguagePickerMode] = useState<'source' | 'target'>('source');
-  const [isPasting, setIsPasting] = useState(false);
-
-  const findAlternativeLanguage = (excludeCode: string) => {
-    const entries = Object.keys(languages);
-    if (!entries.length) {
-      return excludeCode === 'en' ? 'vi' : 'en';
-    }
-    const fallback = entries.find((code) => code !== excludeCode);
-    return fallback || entries[0];
-  };
-
-  const currentSourceLabel =
-    sourceLang === 'auto' ? 'Tự động phát hiện' : languages[sourceLang] || sourceLang;
-  const currentTargetLabel = languages[targetLang] || targetLang;
-  const detectedLabel =
-    detectedLang === 'auto' ? 'Đang phát hiện...' : languages[detectedLang] || detectedLang;
 
   const inputChars = inputText.length;
   const outputChars = outputText.length;
-  const inputWords = inputText.trim() ? inputText.trim().split(/\s+/).length : 0;
-  const outputWords = outputText.trim() ? outputText.trim().split(/\s+/).length : 0;
-  const estimatedReadSeconds = outputWords
-    ? Math.max(5, Math.ceil((outputWords / 150) * 60))
-    : 0;
-
-  const isClearDisabled = !inputText && !outputText && !imagePreview;
-  const showDetectedChip = detectedLang !== 'auto';
-
-  const handleClearAll = () => {
-    setInputText('');
-    setOutputText('');
-    setDetectedLang('auto');
-    setImagePreview(null);
-    setError(null);
-    if (fileInputRef.current) {
-      fileInputRef.current.value = '';
-    }
-  };
 
   useEffect(() => {
     loadLanguages();
@@ -377,87 +343,30 @@ Văn bản:
 
   return (
     <div className="app">
-      <header className="header">
-        <div className="header-top">
-          <div>
-            <h1>🌍 Translate Tool</h1>
-            <p className="subtitle">Ứng dụng dịch thuật đa ngôn ngữ</p>
-          </div>
-          <button
-            className="globe-button"
-            aria-label="Chọn ngôn ngữ nhanh"
-            onClick={() => {
-              setLanguagePickerMode('source');
-              setLanguagePickerOpen(true);
-            }}
-          >
-            🌐
-          </button>
-        </div>
-        <div className="ocr-settings">
-          <span className="ocr-badge">✨ Gemini API (Miễn phí)</span>
-        </div>
-      </header>
+      <HeaderBar
+        onOpenLanguagePicker={() => {
+          setLanguagePickerMode('source');
+          setLanguagePickerOpen(true);
+        }}
+      />
 
       <main className="main-content">
         <div className="translation-container">
           {/* Input Section */}
-          <div className="translation-box">
-            <div className="box-header">
-              <select
-                value={sourceLang}
-                onChange={(e) => setSourceLang(e.target.value)}
-                className="lang-select"
-              >
-                <option value="auto">Tự động phát hiện</option>
-                {Object.entries(languages).map(([code, name]) => (
-                  <option
-                    key={code}
-                    value={code}
-                    disabled={code === targetLang}
-                  >
-                    {name}
-                  </option>
-                ))}
-              </select>
-             
-            </div>
-            <textarea
-              className="text-input"
-              placeholder="Nhập văn bản cần dịch....."
-              value={inputText}
-              onChange={(e) => setInputText(e.target.value)}
-              rows={8}
-            />
-            <div className="box-footer">
-              <div className="footer-left">
-                <button
-                  className="icon-button"
-                  onClick={handleCaptureClick}
-                  title="Chụp/Chọn ảnh để dịch"
-                  disabled={isProcessingOCR}
-                >
-                  📷
-                </button>
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept="image/*"
-                  onChange={handleImageSelect}
-                  style={{ display: 'none' }}
-                />
-                <button
-                  className="icon-button"
-                  onClick={() => handleCopy(inputText)}
-                  title="Sao chép"
-                  disabled={!inputText}
-                >
-                  📋
-                </button>
-              </div>
-              <span className="char-count">{inputText.length} ký tự</span>
-            </div>
-          </div>
+          <SourcePanel
+            sourceLang={sourceLang}
+            targetLang={targetLang}
+            languages={languages}
+            inputText={inputText}
+            isProcessingOCR={isProcessingOCR}
+            charCount={inputChars}
+            fileInputRef={fileInputRef}
+            onSourceLangChange={setSourceLang}
+            onInputTextChange={setInputText}
+            onCaptureClick={handleCaptureClick}
+            onImageSelect={handleImageSelect}
+            onCopy={() => handleCopy(inputText)}
+          />
 
           {/* Swap Button */}
           <div className="swap-container">
@@ -472,43 +381,15 @@ Văn bản:
           </div>
 
           {/* Output Section */}
-          <div className="translation-box">
-            <div className="box-header">
-              <select
-                value={targetLang}
-                onChange={(e) => setTargetLang(e.target.value)}
-                className="lang-select"
-              >
-                {Object.entries(languages).map(([code, name]) => (
-                  <option
-                    key={code}
-                    value={code}
-                    disabled={sourceLang !== 'auto' && code === sourceLang}
-                  >
-                    {name}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <textarea
-              className="text-output"
-              placeholder="Bản dịch sẽ hiển thị ở đây..."
-              value={outputText}
-              readOnly
-              rows={8}
-            />
-            <div className="box-footer">
-              <button
-                className="icon-button"
-                onClick={() => handleCopy(outputText)}
-                title="Sao chép"
-                disabled={!outputText}
-              >
-                📋
-              </button>
-              <span className="char-count">{outputText.length} ký tự</span>
-            </div>
-          </div>
+          <TargetPanel
+            targetLang={targetLang}
+            sourceLang={sourceLang}
+            languages={languages}
+            outputText={outputText}
+            charCount={outputChars}
+            onTargetLangChange={setTargetLang}
+            onCopy={() => handleCopy(outputText)}
+          />
         </div>
 
         {/* Image Preview */}
@@ -549,54 +430,28 @@ Văn bản:
           </div>
         )}
       </main>
-      {languagePickerOpen && (
-        <div className="language-picker-overlay" onClick={() => setLanguagePickerOpen(false)}>
-          <div className="language-picker" onClick={(e) => e.stopPropagation()}>
-            <div className="picker-header">
-              <h3>Chọn ngôn ngữ {languagePickerMode === 'source' ? 'nguồn' : 'đích'}</h3>
-              <div className="picker-actions">
-                <button
-                  className={languagePickerMode === 'source' ? 'active' : ''}
-                  onClick={() => setLanguagePickerMode('source')}
-                >
-                  Nguồn
-                </button>
-                <button
-                  className={languagePickerMode === 'target' ? 'active' : ''}
-                  onClick={() => setLanguagePickerMode('target')}
-                >
-                  Đích
-                </button>
-              </div>
-            </div>
-            <div className="language-list">
-              {Object.entries(languages).map(([code, name]) => (
-                <button
-                  key={code}
-                  className="language-item"
-                  onClick={() => {
-                    if (languagePickerMode === 'source') {
-                      setSourceLang(code);
-                      if (code === targetLang) {
-                        setTargetLang('en');
-                      }
-                    } else {
-                      setTargetLang(code);
-                      if (sourceLang === code) {
-                        setSourceLang('auto');
-                      }
-                    }
-                    setLanguagePickerOpen(false);
-                  }}
-                >
-                  <span className="language-name">{name}</span>
-                  <span className="language-code">{code}</span>
-                </button>
-              ))}
-            </div>
-          </div>
-        </div>
-      )}
+      <LanguagePickerModal
+        open={languagePickerOpen}
+        mode={languagePickerMode}
+        languages={languages}
+        sourceLang={sourceLang}
+        targetLang={targetLang}
+        onClose={() => setLanguagePickerOpen(false)}
+        onModeChange={setLanguagePickerMode}
+        onSelectSource={(code: string) => {
+          setSourceLang(code);
+          if (code === targetLang) {
+            const alternative = Object.keys(languages).find((lang) => lang !== code) || 'en';
+            setTargetLang(alternative);
+          }
+        }}
+        onSelectTarget={(code: string) => {
+          setTargetLang(code);
+          if (sourceLang === code) {
+            setSourceLang('auto');
+          }
+        }}
+      />
     </div>
   );
 };
