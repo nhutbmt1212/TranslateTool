@@ -128,7 +128,7 @@ body {
 }
 
 .translation-box:hover {
-  transform: translateY(-2px);
+
   box-shadow: 0 6px 16px var(--shadow);
 }
 
@@ -178,7 +178,6 @@ body {
   font-family: inherit;
   resize: none;
   outline: none;
-  transition: all 0.2s;
   min-height: 200px;
   line-height: 1.6;
 }

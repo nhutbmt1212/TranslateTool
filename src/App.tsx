@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useRef } from 'react';
-import sampleImageUrl from './assets/Screenshot 2025-11-26 202920.png';
 import languagesMetadata from './data/languages.json';
 
 interface TranslationResult {
@@ -38,14 +37,6 @@ const convertFileToBase64 = (file: File): Promise<string> =>
     reader.onerror = reject;
     reader.readAsDataURL(file);
   });
-
-const fetchSampleImageFile = async (): Promise<File> => {
-  const response = await fetch(sampleImageUrl);
-  const blob = await response.blob();
-  return new File([blob], 'sample-image.png', {
-    type: blob.type || 'image/png',
-  });
-};
 
 declare global {
   interface Window {
@@ -97,14 +88,82 @@ const App: React.FC = () => {
     }
   };
 
+  const translateWithGemini = async (
+    text: string,
+    targetLangCode: string,
+    targetLabel: string,
+    sourceLangCode?: string
+  ): Promise<{ translatedText: string; detectedLang: string }> => {
+    const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY?.trim();
+    if (!GEMINI_API_KEY) {
+      throw new Error('Thiếu VITE_GEMINI_API_KEY trong file .env');
+    }
+
+    const GEMINI_MODEL = 'gemini-2.5-flash-lite';
+    const sourceInstruction = sourceLangCode
+      ? `Nguồn văn bản sử dụng mã ngôn ngữ ${sourceLangCode}.`
+      : 'Hãy tự động phát hiện ngôn ngữ nguồn và trả về mã ISO 639-1.';
+
+    const prompt = `Bạn là công cụ dịch chính xác.
+${sourceInstruction}
+Dịch văn bản sang ${targetLabel} (mã ${targetLangCode}) và chỉ trả về JSON:
+{"detectedLang":"<mã nguồn>","translatedText":"<bản dịch>"}
+Giữ nguyên xuống dòng, không thêm giải thích hay ký hiệu.
+
+Văn bản:
+"""${text}"""`;
+
+    const response = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${GEMINI_API_KEY}`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [
+            {
+              parts: [{ text: prompt }],
+            },
+          ],
+        }),
+      }
+    );
+
+    if (!response.ok) {
+      const error = await response.json().catch(() => undefined);
+      throw new Error(error?.error?.message || 'Lỗi khi gọi Gemini API (dịch)');
+    }
+
+    const data = await response.json();
+    const rawText = (data.candidates?.[0]?.content?.parts || [])
+      .map((part: { text?: string }) => part.text ?? '')
+      .join('\n')
+      .trim();
+
+    if (!rawText) {
+      throw new Error('Không nhận được phản hồi từ Gemini');
+    }
+
+    const cleaned = rawText.replace(/```json|```/g, '').trim();
+    let parsed: { translatedText?: string; detectedLang?: string };
+    try {
+      parsed = JSON.parse(cleaned);
+    } catch (err) {
+      throw new Error('Phản hồi Gemini không đúng định dạng JSON yêu cầu');
+    }
+
+    if (!parsed.translatedText) {
+      throw new Error('Gemini không trả về bản dịch');
+    }
+
+    return {
+      translatedText: parsed.translatedText.trim(),
+      detectedLang: parsed.detectedLang?.trim() || sourceLangCode || 'auto',
+    };
+  };
+
   const handleTranslate = async () => {
     if (!inputText.trim()) {
       setError('Vui lòng nhập văn bản cần dịch');
-      return;
-    }
-
-    if (!window.electronAPI?.translate) {
-      setError('Electron API không khả dụng. Vui lòng chạy ứng dụng bằng Electron.');
       return;
     }
 
@@ -113,17 +172,22 @@ const App: React.FC = () => {
     setOutputText('');
 
     try {
-      const result = await window.electronAPI.translate(
+      const targetLabel = languages[targetLang] || targetLang;
+      const { translatedText, detectedLang: detected } = await translateWithGemini(
         inputText,
         targetLang,
+        targetLabel,
         sourceLang === 'auto' ? undefined : sourceLang
       );
 
-      if (result.success && result.data) {
-        setOutputText(result.data.text);
-        setDetectedLang(result.data.from);
-      } else {
-        setError(result.error || 'Lỗi dịch thuật');
+      setOutputText(translatedText);
+      const detectedCode = detected || 'auto';
+      setDetectedLang(detectedCode);
+
+      if (sourceLang === 'auto' && detectedCode !== 'auto' && languages[detectedCode]) {
+        if (detectedCode !== targetLang) {
+          setSourceLang(detectedCode);
+        }
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Lỗi không xác định');
@@ -201,31 +265,6 @@ const App: React.FC = () => {
 
   const handleCaptureClick = () => {
     fileInputRef.current?.click();
-  };
-
-  const handleSampleImageTest = async () => {
-    setIsProcessingOCR(true);
-    setError(null);
-    try {
-      const sampleFile = await fetchSampleImageFile();
-      const base64DataUrl = await convertFileToBase64(sampleFile);
-      setImagePreview(base64DataUrl);
-
-      const text = await recognizeWithGemini(sampleFile);
-      const cleanedText = text.trim();
-      if (cleanedText) {
-        setInputText(cleanedText);
-        setTimeout(() => {
-          handleTranslate();
-        }, 100);
-      } else {
-        setError('Không nhận diện được văn bản từ ảnh mẫu');
-      }
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Lỗi khi xử lý ảnh mẫu');
-    } finally {
-      setIsProcessingOCR(false);
-    }
   };
 
   // OCR với Google Gemini API (miễn phí, không cần billing)
@@ -318,14 +357,16 @@ const App: React.FC = () => {
               >
                 <option value="auto">Tự động phát hiện</option>
                 {Object.entries(languages).map(([code, name]) => (
-                  <option key={code} value={code}>
+                  <option
+                    key={code}
+                    value={code}
+                    disabled={code === targetLang}
+                  >
                     {name}
                   </option>
                 ))}
               </select>
-              {sourceLang !== 'auto' && detectedLang !== 'auto' && (
-                <span className="detected-lang">Phát hiện: {languages[detectedLang] || detectedLang}</span>
-              )}
+             
             </div>
             <textarea
               className="text-input"
@@ -385,7 +426,11 @@ const App: React.FC = () => {
                 className="lang-select"
               >
                 {Object.entries(languages).map(([code, name]) => (
-                  <option key={code} value={code}>
+                  <option
+                    key={code}
+                    value={code}
+                    disabled={sourceLang !== 'auto' && code === sourceLang}
+                  >
                     {name}
                   </option>
                 ))}
@@ -441,15 +486,6 @@ const App: React.FC = () => {
             : isTranslating
             ? '🔄 Đang dịch...'
             : '✨ Dịch'}
-        </button>
-
-        {/* Sample Image Button */}
-        <button
-          className="test-button"
-          onClick={handleSampleImageTest}
-          disabled={isProcessingOCR || isTranslating}
-        >
-          {isProcessingOCR ? '🖼️ Đang xử lý ảnh mẫu...' : '🖼️ Dùng ảnh mẫu Robinquill'}
         </button>
 
         {/* Error Message */}
