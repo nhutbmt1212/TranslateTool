@@ -19,6 +19,7 @@
   --control-border: #d9def1;
   --control-icon-bg: #e9edff;
   --control-icon-color: #4b5bcc;
+  --control-highlight: rgba(255, 255, 255, 0.7);
   --input-bg: #f9fafc;
   --input-border: #e2e6f0;
   --input-alt-bg: #fbfcff;
@@ -38,6 +39,10 @@
   --hero-actions-border: #e1e5f4;
   --hero-menu-bg: #ffffff;
   --hero-menu-border: #dfe4f6;
+  --caret-color: #505473;
+  --menu-hover-bg: #eef2ff;
+  --menu-active-bg: #e3e7ff;
+  --menu-hover-color: var(--accent);
   --translate-gradient: linear-gradient(120deg, #b19bff, #8cb7ff);
   --overlay: rgba(15, 23, 42, 0.45);
   --language-card-bg: #f9f9ff;
@@ -66,6 +71,7 @@
   --control-border: rgba(255, 255, 255, 0.12);
   --control-icon-bg: rgba(255, 255, 255, 0.15);
   --control-icon-color: #ffffff;
+  --control-highlight: rgba(255, 255, 255, 0.2);
   --input-bg: rgba(5, 7, 17, 0.95);
   --input-border: rgba(255, 255, 255, 0.08);
   --input-alt-bg: rgba(8, 9, 20, 0.85);
@@ -85,6 +91,10 @@
   --hero-actions-border: rgba(255, 255, 255, 0.1);
   --hero-menu-bg: #0f1123;
   --hero-menu-border: rgba(255, 255, 255, 0.12);
+  --caret-color: #cdd2ff;
+  --menu-hover-bg: rgba(67, 56, 202, 0.25);
+  --menu-active-bg: rgba(99, 102, 241, 0.3);
+  --menu-hover-color: #ffffff;
   --translate-gradient: linear-gradient(120deg, #7c5dfa, #3cdfff);
   --overlay: rgba(5, 6, 11, 0.78);
   --language-card-bg: rgba(255, 255, 255, 0.04);
@@ -297,7 +307,7 @@ body {
   border: 1px solid var(--control-border);
   padding: 6px 36px 6px 12px;
   background: var(--control-bg);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7);
+  box-shadow: inset 0 1px 0 var(--control-highlight);
   cursor: pointer;
 }
 
@@ -310,7 +320,7 @@ body {
   position: absolute;
   right: 12px;
   font-size: 12px;
-  color: #505473;
+  color: var(--caret-color);
 }
 
 .hero-select-icon {
@@ -393,8 +403,8 @@ body {
   width: 100%;
   min-width: 160px;
   border-radius: 16px;
-  border: 1px solid #dfe4f6;
-  background: #fff;
+  border: 1px solid var(--hero-menu-border);
+  background: var(--hero-menu-bg);
   box-shadow: 0 20px 40px rgba(15, 23, 42, 0.15);
   padding: 6px;
   display: flex;
@@ -416,13 +426,13 @@ body {
 }
 
 .hero-option:hover {
-  background: #eef2ff;
-  color: var(--accent);
+  background: var(--menu-hover-bg);
+  color: var(--menu-hover-color);
 }
 
 .hero-option.active {
-  background: #e3e7ff;
-  color: var(--accent);
+  background: var(--menu-active-bg);
+  color: var(--menu-hover-color);
   font-weight: 600;
 }
 

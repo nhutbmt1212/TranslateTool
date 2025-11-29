@@ -52,11 +52,6 @@ const HeaderBar: React.FC<HeaderBarProps> = ({
   return (
     <header className="header hero-banner">
       <div className="hero-text">
-        <div className={`brand-logo ${theme}`} aria-hidden="true">
-          <span className="logo-glow" />
-          <span className="logo-core" />
-          <span className="logo-ora" />
-        </div>
         <p className="brand-eyebrow">AI-first translation cockpit</p>
         <h1>{t('app.title')}</h1>
         <p className="subtitle">{t('app.subtitle')}</p>

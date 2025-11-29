@@ -1,5 +1,5 @@
 /// <reference types="electron" />
-import { app, BrowserWindow, ipcMain } from 'electron';
+import { app, BrowserWindow, ipcMain, screen } from 'electron';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 import { Translator } from '../src/translator.js';
@@ -11,11 +11,15 @@ let mainWindow: BrowserWindow | null = null;
 const translator = new Translator();
 
 function createWindow() {
+  const { workArea } = screen.getPrimaryDisplay();
+  const desiredWidth = Math.floor(workArea.width * 0.8);
+  const desiredHeight = Math.floor(workArea.height * 0.9);
+
   mainWindow = new BrowserWindow({
-    width: 900,
-    height: 700,
-    minWidth: 600,
-    minHeight: 500,
+    width: desiredWidth,
+    height: desiredHeight,
+    minWidth: 900,
+    minHeight: 600,
     webPreferences: {
       nodeIntegration: false,
       contextIsolation: true,
