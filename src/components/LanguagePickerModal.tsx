@@ -78,6 +78,13 @@ const LanguagePickerModal: React.FC<LanguagePickerModalProps> = ({
 
   const isLetterKey = useCallback((value: string) => /^\p{L}$/u.test(value), []);
 
+  // Clear search term when modal opens
+  useEffect(() => {
+    if (open) {
+      setSearchTerm('');
+    }
+  }, [open]);
+
   useEffect(() => {
     if (!open) return undefined;
 

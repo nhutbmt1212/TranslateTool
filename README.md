@@ -24,7 +24,8 @@ Built on the most modern web technologies: **Electron**, **React**, **TypeScript
 | **🚀 Instant Translation** | Ultra-fast response speed, supporting Real-time translation. |
 | **🌍 Multi-language** | Support for over 100 languages (Vietnamese, English, Chinese, Japanese, Korean, French, German...). |
 | **🧠 AI Detection** | Smart automatic source language detection. |
-| **📸 OCR & Snipping** | Integrated screen capture and direct text translation from images (OCR). |
+| **📸 Image Translation** | Paste or upload images to extract and translate text instantly using advanced OCR powered by Gemini AI. |
+| **⌨️ Quick Paste** | Press Ctrl+V to paste text or images and translate automatically. |
 | **💻 Powerful CLI** | Includes a command-line interface (CLI) for automation tasks. |
 
 ## 🛠️ Tech Stack
@@ -82,6 +83,10 @@ The installer will be created in the `release/` directory.
 
 ### Language Selection
 ![Language Selection](./src/assets/screenshot-languages.png)
+
+### Image Translation (OCR)
+![Image Translation](./src/assets/screenshot-ocr.png)
+*Paste or upload images to extract and translate text instantly using Gemini AI-powered OCR*
 
 ## 🤝 Contributing
 
