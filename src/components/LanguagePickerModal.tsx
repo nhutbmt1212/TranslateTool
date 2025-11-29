@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Languages } from '../types/languages';
 
@@ -28,8 +28,7 @@ const LanguagePickerModal: React.FC<LanguagePickerModalProps> = ({
   onSelectTarget,
 }) => {
   const { t } = useTranslation();
-
-  if (!open) return null;
+  const [searchTerm, setSearchTerm] = useState('');
 
   const handleSelect = (code: string) => {
     if (mode === 'source') {
@@ -49,6 +48,20 @@ const LanguagePickerModal: React.FC<LanguagePickerModalProps> = ({
 
   const titleKey = mode === 'source' ? 'languagePicker.titleSource' : 'languagePicker.titleTarget';
 
+  const filteredLanguages = useMemo(() => {
+    const query = searchTerm.trim().toLowerCase();
+    if (!query) {
+      return Object.entries(languages);
+    }
+
+    return Object.entries(languages).filter(([code, name]) => {
+      const haystack = `${name} ${code}`.toLowerCase();
+      return haystack.includes(query);
+    });
+  }, [languages, searchTerm]);
+
+  if (!open) return null;
+
   return (
     <div className="language-picker-overlay" onClick={onClose}>
       <div className="language-picker" onClick={(e) => e.stopPropagation()}>
@@ -66,18 +79,35 @@ const LanguagePickerModal: React.FC<LanguagePickerModalProps> = ({
             </button>
           </div>
         </div>
-        <div className="language-list">
-          {Object.entries(languages).map(([code, name]) => (
-            <button
-              key={code}
-              className={`language-item${isDisabled(code) ? ' disabled' : ''}`}
-              onClick={() => handleSelect(code)}
-              disabled={isDisabled(code)}
-            >
-              <span className="language-name">{name}</span>
-              <span className="language-code">{code}</span>
+        <div className="picker-search">
+          <input
+            type="text"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            placeholder={t('languagePicker.searchPlaceholder', 'Search languages...') ?? 'Search languages...'}
+          />
+          {searchTerm && (
+            <button type="button" onClick={() => setSearchTerm('')} aria-label={t('general.clear', 'Clear')}>
+              ✕
             </button>
-          ))}
+          )}
+        </div>
+        <div className="language-list">
+          {filteredLanguages.map(([code, name]) => {
+            const selected = mode === 'source' ? code === sourceLang : code === targetLang;
+            return (
+              <button
+                key={code}
+                className={`language-item${isDisabled(code) ? ' disabled' : ''}${selected ? ' selected' : ''}`}
+                onClick={() => handleSelect(code)}
+                disabled={isDisabled(code)}
+              >
+                <span className="language-name">{name}</span>
+                <span className="language-code">{code}</span>
+                {selected && <span className="language-check" aria-hidden="true">✓</span>}
+              </button>
+            );
+          })}
         </div>
       </div>
     </div>
