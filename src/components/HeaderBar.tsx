@@ -6,6 +6,8 @@ interface HeaderBarProps {
   uiLanguageOptions: { code: string; label: string }[];
   currentUiLanguage: string;
   onUiLanguageChange: (code: string) => void;
+  theme: 'light' | 'dark';
+  onThemeToggle: () => void;
 }
 
 const HeaderBar: React.FC<HeaderBarProps> = ({
@@ -13,6 +15,8 @@ const HeaderBar: React.FC<HeaderBarProps> = ({
   uiLanguageOptions,
   currentUiLanguage,
   onUiLanguageChange,
+  theme,
+  onThemeToggle,
 }) => {
   const { t } = useTranslation();
   const [uiMenuOpen, setUiMenuOpen] = useState(false);
@@ -40,9 +44,19 @@ const HeaderBar: React.FC<HeaderBarProps> = ({
     setUiMenuOpen(false);
   };
 
+  const themeToggleLabel =
+    theme === 'light'
+      ? t('header.switchDark', 'Switch to dark mode')
+      : t('header.switchLight', 'Switch to light mode');
+
   return (
     <header className="header hero-banner">
       <div className="hero-text">
+        <div className={`brand-logo ${theme}`} aria-hidden="true">
+          <span className="logo-glow" />
+          <span className="logo-core" />
+          <span className="logo-ora" />
+        </div>
         <p className="brand-eyebrow">AI-first translation cockpit</p>
         <h1>{t('app.title')}</h1>
         <p className="subtitle">{t('app.subtitle')}</p>
@@ -82,6 +96,17 @@ const HeaderBar: React.FC<HeaderBarProps> = ({
             </div>
           )}
         </div>
+        <button
+          type="button"
+          className="hero-toggle"
+          onClick={onThemeToggle}
+          aria-label={themeToggleLabel}
+        >
+          <span className="hero-toggle-icon" aria-hidden="true">
+            {theme === 'light' ? '🌙' : '☀️'}
+          </span>
+          <span>{theme === 'light' ? t('header.darkMode', 'Dark') : t('header.lightMode', 'Light')}</span>
+        </button>
         <button
           type="button"
           className="hero-button"

@@ -48,6 +48,19 @@ declare global {
   }
 }
 
+const getInitialTheme = (): 'light' | 'dark' => {
+  if (typeof window === 'undefined') {
+    return 'light';
+  }
+
+  const stored = localStorage.getItem('app-theme');
+  if (stored === 'light' || stored === 'dark') {
+    return stored;
+  }
+
+  return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+};
+
 const App: React.FC = () => {   
   const { t, i18n } = useTranslation();
   const [inputText, setInputText] = useState('');
@@ -63,9 +76,19 @@ const App: React.FC = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [languagePickerOpen, setLanguagePickerOpen] = useState(false);
   const [languagePickerMode, setLanguagePickerMode] = useState<'source' | 'target'>('source');
+  const [theme, setTheme] = useState<'light' | 'dark'>(getInitialTheme);
 
   const inputChars = inputText.length;
   const outputChars = outputText.length;
+
+  useEffect(() => {
+    if (typeof document !== 'undefined') {
+      document.documentElement.setAttribute('data-theme', theme);
+    }
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('app-theme', theme);
+    }
+  }, [theme]);
 
   useEffect(() => {
     const api = window.electronAPI;
@@ -347,6 +370,10 @@ Văn bản:
     i18n.changeLanguage(code);
   };
 
+  const handleThemeToggle = () => {
+    setTheme((prev) => (prev === 'light' ? 'dark' : 'light'));
+  };
+
   const resolvedLanguage = i18n.resolvedLanguage || i18n.language || 'en';
   const currentUiLanguage = resolvedLanguage.split('-')[0];
   const sourceLabel =
@@ -367,6 +394,8 @@ Văn bản:
           uiLanguageOptions={uiLanguageOptions}
           currentUiLanguage={currentUiLanguage}
           onUiLanguageChange={handleUiLanguageChange}
+          theme={theme}
+          onThemeToggle={handleThemeToggle}
         />
 
         <main className="main-content">

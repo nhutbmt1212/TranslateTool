@@ -18,8 +18,6 @@ const resolveLanguagesPath = () => {
     join(__dirname, '../../src/data/languages.json'),
   ];
 
-  console.log(candidatePaths);
-  
 
   for (const candidate of candidatePaths) {
     if (existsSync(candidate)) {
