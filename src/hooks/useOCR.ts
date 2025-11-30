@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { ApiKeyManager } from '../utils/apiKeyManager';
 
 export const useOCR = () => {
     const { t } = useTranslation();
@@ -16,7 +17,7 @@ export const useOCR = () => {
         });
 
     const recognizeWithGemini = async (file: File): Promise<string> => {
-        const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY?.trim();
+        const GEMINI_API_KEY = await ApiKeyManager.getApiKey();
         if (!GEMINI_API_KEY) {
             throw new Error(t('errors.missingGeminiKey'));
         }
