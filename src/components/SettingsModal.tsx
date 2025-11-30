@@ -13,25 +13,44 @@ interface SettingsModalProps {
 const SettingsModal: React.FC<SettingsModalProps> = ({ open, onClose }) => {
     const { t } = useTranslation();
     const [apiKey, setApiKey] = useState('');
+    const [maskedKey, setMaskedKey] = useState<string | null>(null);
     const [showKey, setShowKey] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
 
     useEffect(() => {
         if (open) {
-            loadApiKey();
+            loadMaskedKey();
+            setApiKey('');
+            setShowKey(false);
         }
     }, [open]);
 
-    const loadApiKey = async () => {
-        const key = await ApiKeyManager.getApiKey();
-        setApiKey(key || '');
+    const loadMaskedKey = async () => {
+        const masked = await ApiKeyManager.getMaskedApiKey();
+        setMaskedKey(masked);
     };
 
     const handleSave = async () => {
+        if (!apiKey.trim()) {
+            toast.error(t('settings.errors.emptyKey') || 'API key cannot be empty');
+            return;
+        }
+
+        // Validate API key format
+        const validation = ApiKeyManager.validateApiKeyFormat(apiKey);
+        if (!validation.valid) {
+            toast.error(validation.error || 'Invalid API key');
+            return;
+        }
+
         setIsLoading(true);
         try {
             await ApiKeyManager.saveApiKey(apiKey);
             toast.success(t('settings.apiKey.saved') || 'API key saved successfully!');
+            setApiKey('');
+            await loadMaskedKey();
+
+            // Auto close after success
             setTimeout(() => {
                 onClose();
             }, 1000);
@@ -45,6 +64,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ open, onClose }) => {
     const handleClear = async () => {
         if (window.confirm(t('settings.apiKey.confirmClear') || 'Are you sure you want to clear the API key?')) {
             await ApiKeyManager.clearApiKey();
+            setMaskedKey(null);
             setApiKey('');
             toast.success(t('settings.apiKey.cleared') || 'API key cleared');
         }
@@ -70,47 +90,69 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ open, onClose }) => {
                                 'Your API key is encrypted and stored securely in your browser. It will persist across sessions.'}
                         </p>
 
-                        <div className="api-key-input-wrapper">
-                            <div className="picker-search">
-                                <input
-                                    type={showKey ? 'text' : 'password'}
-                                    value={apiKey}
-                                    onChange={(e) => setApiKey(e.target.value)}
-                                    placeholder={t('settings.apiKey.placeholder') || 'Enter your Gemini API Key'}
-                                    className="api-key-input"
-                                />
-                                <button
-                                    type="button"
-                                    className="toggle-visibility-button"
-                                    onClick={() => setShowKey(!showKey)}
-                                    title={showKey ? 'Hide' : 'Show'}
-                                >
-                                    {showKey ? (
-                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
-                                            <circle cx="12" cy="12" r="3" />
+                        {maskedKey && (
+                            <div className="current-key-display">
+                                <div className="current-key-label">
+                                    {t('settings.apiKey.current') || 'Current API Key:'}
+                                </div>
+                                <div className="current-key-value">
+                                    <code>{maskedKey}</code>
+                                    <button
+                                        type="button"
+                                        className="clear-key-button"
+                                        onClick={handleClear}
+                                        title={t('settings.apiKey.clear') || 'Clear API Key'}
+                                        aria-label="Clear API Key"
+                                    >
+                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                            <polyline points="3 6 5 6 21 6" />
+                                            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                                            <line x1="10" y1="11" x2="10" y2="17" />
+                                            <line x1="14" y1="11" x2="14" y2="17" />
                                         </svg>
-                                    ) : (
-                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                            <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24" />
-                                            <line x1="1" y1="1" x2="23" y2="23" />
-                                        </svg>
-                                    )}
-                                </button>
+                                    </button>
+                                </div>
                             </div>
-                            {apiKey && (
-                                <button
-                                    type="button"
-                                    className="clear-key-button"
-                                    onClick={handleClear}
-                                    title={t('settings.apiKey.clear') || 'Clear API Key'}
-                                >
-                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                        <polyline points="3 6 5 6 21 6" />
-                                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
-                                    </svg>
-                                </button>
-                            )}
+                        )}
+
+                        <div className="input-group">
+                            <label htmlFor="api-key-input" style={{ display: 'block', marginBottom: '8px', fontWeight: 500, color: 'var(--text-primary)' }}>
+                                {maskedKey
+                                    ? t('settings.apiKey.update') || 'Update API Key'
+                                    : t('settings.apiKey.enter') || 'Enter API Key'}
+                            </label>
+                            <div className="api-key-input-wrapper">
+                                <div className="picker-search">
+                                    <input
+                                        id="api-key-input"
+                                        type={showKey ? 'text' : 'password'}
+                                        value={apiKey}
+                                        onChange={(e) => setApiKey(e.target.value)}
+                                        placeholder={t('settings.apiKey.placeholder') || 'Enter your Gemini API Key'}
+                                        className="api-key-input"
+                                        autoComplete="off"
+                                        spellCheck={false}
+                                    />
+                                    <button
+                                        type="button"
+                                        className="toggle-visibility-button"
+                                        onClick={() => setShowKey(!showKey)}
+                                        title={showKey ? 'Hide' : 'Show'}
+                                    >
+                                        {showKey ? (
+                                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                                <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24" />
+                                                <line x1="1" y1="1" x2="23" y2="23" />
+                                            </svg>
+                                        ) : (
+                                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                                                <circle cx="12" cy="12" r="3" />
+                                            </svg>
+                                        )}
+                                    </button>
+                                </div>
+                            </div>
                         </div>
 
                         <div className="settings-help">

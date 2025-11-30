@@ -1,7 +1,7 @@
 {
-  "name": "translate-tool",
+  "name": "dalit",
   "version": "1.0.0",
-  "description": "Ứng dụng dịch thuật desktop bằng TypeScript",
+  "description": "DALIT - AI-powered translation platform",
   "main": "dist-electron/electron/main.js",
   "type": "module",
   "scripts": {
@@ -16,7 +16,9 @@
     "translation",
     "typescript",
     "electron",
-    "desktop"
+    "desktop",
+    "dalit",
+    "ai"
   ],
   "author": "",
   "license": "MIT",
@@ -44,8 +46,8 @@
     "react-i18next": "^16.3.5"
   },
   "build": {
-    "appId": "com.translatetool.app",
-    "productName": "Translate Tool",
+    "appId": "com.dalit.app",
+    "productName": "DALIT",
     "directories": {
       "output": "release"
     },

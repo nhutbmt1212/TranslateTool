@@ -14,8 +14,8 @@ const resources = {
   en: {
     translation: {
       app: {
-        title: '🌍 Translate Tool',
-        subtitle: 'Multi-language translation assistant',
+        title: 'DALIT',
+        subtitle: 'AI-powered translation platform',
       },
       header: {
         uiLanguageLabel: 'Interface language',
@@ -54,6 +54,7 @@ const resources = {
         eyebrow: 'Language roster',
       },
       settings: {
+        eyebrow: 'CONFIGURATION',
         title: 'Settings',
         save: 'Save',
         cancel: 'Cancel',
@@ -61,6 +62,7 @@ const resources = {
         apiKey: {
           title: 'Gemini API Key',
           description: 'Your API key is encrypted and stored securely in your browser session. It will be cleared when you close the app.',
+          placeholder: 'Enter your Gemini API Key',
           current: 'Current API Key:',
           enter: 'Enter API Key',
           update: 'Update API Key',
@@ -101,8 +103,8 @@ const resources = {
   vi: {
     translation: {
       app: {
-        title: '🌍 Translate Tool',
-        subtitle: 'Ứng dụng dịch thuật đa ngôn ngữ',
+        title: 'DALIT',
+        subtitle: 'Nền tảng dịch thuật AI',
       },
       header: {
         uiLanguageLabel: 'Ngôn ngữ giao diện',
@@ -141,6 +143,7 @@ const resources = {
         eyebrow: 'Bộ sưu tập ngôn ngữ',
       },
       settings: {
+        eyebrow: 'CẤU HÌNH',
         title: 'Cài đặt',
         save: 'Lưu',
         cancel: 'Hủy',
@@ -148,6 +151,7 @@ const resources = {
         apiKey: {
           title: 'Khóa API Gemini',
           description: 'Khóa API của bạn được mã hóa và lưu trữ an toàn trong phiên trình duyệt. Nó sẽ bị xóa khi bạn đóng ứng dụng.',
+          placeholder: 'Nhập khóa API Gemini của bạn',
           current: 'Khóa API hiện tại:',
           enter: 'Nhập khóa API',
           update: 'Cập nhật khóa API',

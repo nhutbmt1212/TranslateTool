@@ -111,6 +111,14 @@
     background: var(--panel);
 }
 
+/* Remove border and padding from picker-search inside api-key-input-wrapper */
+.api-key-input-wrapper .picker-search {
+    border: none;
+    padding: 0;
+    background: transparent;
+    flex: 1;
+}
+
 .api-key-input {
     flex: 1;
     border: none;
@@ -160,6 +168,24 @@
 
 .external-link:hover {
     color: var(--accent);
+    text-decoration: underline;
+}
+
+.settings-help {
+    margin-top: 12px;
+}
+
+.get-key-link {
+    display: inline-flex;
+    align-items: center;
+    color: var(--accent);
+    text-decoration: none;
+    font-size: 14px;
+    font-weight: 600;
+    transition: all 0.2s ease;
+}
+
+.get-key-link:hover {
     text-decoration: underline;
 }
 

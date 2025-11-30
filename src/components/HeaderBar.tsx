@@ -54,12 +54,11 @@ const HeaderBar: React.FC<HeaderBarProps> = ({
   return (
     <header className="header hero-banner">
       <div className="hero-text">
-        <p className="brand-eyebrow">AI-first translation cockpit</p>
+        <p className="brand-eyebrow">POWERED BY AI</p>
         <h1>{t('app.title')}</h1>
         <p className="subtitle">{t('app.subtitle')}</p>
       </div>
       <div className="hero-actions">
-        <span className="hero-label">{t('header.uiLanguageLabel')}</span>
         <div className="hero-select-wrapper" ref={menuRef}>
           <button
             type="button"
