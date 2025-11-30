@@ -8,6 +8,7 @@ import TargetPanel from './components/TargetPanel';
 import LanguagePickerModal from './components/LanguagePickerModal';
 import ImagePreview from './components/ImagePreview';
 import SettingsModal from './components/SettingsModal';
+import TranslateIcon from './components/TranslateIcon';
 import { Languages, LanguageMetadata } from './types/languages';
 import { uiLanguageOptions } from './i18n';
 import { useOCR } from './hooks/useOCR';
@@ -353,7 +354,11 @@ const App: React.FC = () => {
               onClick={() => handleTranslate(inputText)}
               disabled={isTranslating || isProcessingOCR || !inputText.trim()}
             >
-              {isTranslating && <span className="button-spinner" aria-hidden="true" />}
+              {isTranslating ? (
+                <span className="button-spinner" aria-hidden="true" />
+              ) : (
+                <TranslateIcon size={24} className="translate-icon" />
+              )}
               <span className="translate-button-label">{translateButtonLabel}</span>
             </button>
           </section>
