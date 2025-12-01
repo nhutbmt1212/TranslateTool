@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 
 interface ImagePreviewProps {
     imagePreview: string | null;
@@ -8,6 +9,8 @@ interface ImagePreviewProps {
 }
 
 const ImagePreview: React.FC<ImagePreviewProps> = ({ imagePreview, isProcessingOCR, countdown, onClose }) => {
+    const { t } = useTranslation();
+    
     if (!imagePreview) return null;
 
     // Calculate circle progress (circumference = 2 * PI * radius = 2 * 3.14159 * 10 ≈ 62.83)
@@ -25,7 +28,7 @@ const ImagePreview: React.FC<ImagePreviewProps> = ({ imagePreview, isProcessingO
                         <div className="ocr-progress-bar">
                             <div className="ocr-progress-indicator" />
                         </div>
-                        <span className="ocr-status-text">Processing...</span>
+                        <span className="ocr-status-text">{t('status.processing')}</span>
                     </div>
                 )}
             </div>

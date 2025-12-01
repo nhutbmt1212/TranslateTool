@@ -109,3 +109,93 @@
   background: rgba(255, 255, 255, 0.15);
   border-radius: 999px;
 }
+
+
+/* Disable text selection for UI elements */
+button,
+.swap-button,
+.icon-button,
+.translate-button,
+.hero-button,
+.hero-toggle,
+.hero-select,
+.simple-select,
+.simple-select-trigger,
+.picker-actions,
+.language-item,
+.header,
+.brand-logo,
+.brand-eyebrow,
+.hero-label,
+.panel-legend,
+.detected-chip,
+.simple-detected,
+.char-count,
+.simple-char-count,
+.countdown-timer,
+.image-preview-close,
+.ocr-status-text,
+.settings-save-button,
+.settings-cancel-button,
+.picker-eyebrow,
+.picker-header h3,
+.settings-section h3,
+.current-key-label,
+.input-hint,
+.security-info,
+.settings-description,
+.settings-error,
+.settings-success,
+.get-key-link,
+.external-link,
+.settings-help,
+label,
+h1, h2, h3, h4, h5, h6,
+.subtitle,
+.meta-label,
+.meta-card strong,
+.language-name,
+.language-code,
+.panel-heading,
+.panel-top,
+.box-footer,
+.action-bar,
+.swap-panel,
+.translation-section,
+.app-shell,
+.hero-actions {
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+}
+
+/* Allow text selection for input/output areas */
+.text-input,
+.text-output,
+.api-key-input,
+.picker-search input,
+input[type="text"],
+input[type="password"],
+textarea,
+code {
+  user-select: text;
+  -webkit-user-select: text;
+  -moz-user-select: text;
+  -ms-user-select: text;
+}
+
+/* Prevent selection on images */
+img {
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  pointer-events: none;
+}
+
+/* Allow pointer events on clickable images */
+img[role="button"],
+button img {
+  pointer-events: auto;
+}

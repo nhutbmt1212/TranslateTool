@@ -3,17 +3,16 @@
   min-height: 100vh;
   height: 100vh;
   overflow: hidden;
-  background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%);
+  background: var(--canvas);
 }
 
 .grid-overlay {
   position: fixed;
   inset: 0;
-  background-image: linear-gradient(rgba(255, 255, 255, 0.03) 1px,
-      transparent 1px),
-    linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+  background-image: linear-gradient(var(--surface-border) 1px, transparent 1px),
+    linear-gradient(90deg, var(--surface-border) 1px, transparent 1px);
   background-size: 60px 60px;
-  opacity: 0.6;
+  opacity: 0.3;
   pointer-events: none;
   z-index: 0;
 }
@@ -24,21 +23,22 @@
   height: 400px;
   border-radius: 50%;
   filter: blur(100px);
-  opacity: 0.4;
+  opacity: 0.3;
   pointer-events: none;
   z-index: 0;
+  transition: opacity 0.3s ease;
 }
 
 .orb-one {
   top: -100px;
   right: 10%;
-  background: radial-gradient(circle, rgba(139, 92, 246, 0.6) 0%, rgba(99, 102, 241, 0.3) 50%, transparent 100%);
+  background: radial-gradient(circle, var(--orb-one) 0%, transparent 70%);
 }
 
 .orb-two {
   bottom: -150px;
   left: 5%;
-  background: radial-gradient(circle, rgba(59, 130, 246, 0.6) 0%, rgba(14, 165, 233, 0.3) 50%, transparent 100%);
+  background: radial-gradient(circle, var(--orb-two) 0%, transparent 70%);
 }
 
 .app-surface {

@@ -34,18 +34,23 @@ export const useTranslationLogic = (
 
         const GEMINI_MODEL = 'gemini-2.5-flash-lite';
         const sourceInstruction = sourceLangCode
-            ? `Nguồn văn bản sử dụng mã ngôn ngữ ${sourceLangCode}.`
-            : 'Hãy tự động phát hiện ngôn ngữ nguồn và trả về mã ISO 639-1.';
+            ? `The source text is in language code: ${sourceLangCode}.`
+            : 'Automatically detect the source language and return its ISO 639-1 code.';
 
         const prompt = `You are a professional translator.
-Translate the following text to ${targetLabel} (ISO code: ${targetLangCode}).
+
+Task: Translate the following text to ${targetLabel} (ISO code: ${targetLangCode}).
 ${sourceInstruction}
 
-STRICTLY RETURN ONLY A VALID JSON OBJECT. NO MARKDOWN. NO CODE BLOCKS. NO EXTRA TEXT.
-The JSON must have exactly this structure:
+IMPORTANT RULES:
+1. ONLY translate the text content, do NOT translate language names or codes
+2. Preserve the original meaning and tone
+3. Return ONLY a valid JSON object with NO markdown, NO code blocks, NO extra text
+
+Required JSON structure:
 {
   "detectedLang": "source_language_iso_code",
-  "translatedText": "translated_text_here"
+  "translatedText": "your_translation_here"
 }
 
 Text to translate:
@@ -150,7 +155,14 @@ ${JSON.stringify(text)}`;
                     if (currentTarget !== defaultTarget) {
                         currentTarget = defaultTarget;
                         targetLabel = languages[currentTarget] || currentTarget;
+                        
+                        // Update target language immediately
                         setTargetLang(currentTarget);
+                        
+                        // Also persist to localStorage immediately
+                        if (typeof window !== 'undefined') {
+                            localStorage.setItem('app-target-lang', currentTarget);
+                        }
 
                         const retryResult = await translateWithGemini(
                             textToTranslate,

@@ -42,6 +42,7 @@ const resources = {
       status: {
         ocrInProgress: 'Performing OCR…',
         translating: 'Translating…',
+        processing: 'Processing...',
       },
       ocr: {
         badge: '✨ Gemini API (Free)',
@@ -133,6 +134,7 @@ const resources = {
       status: {
         ocrInProgress: 'Đang nhận diện văn bản...',
         translating: 'Đang dịch...',
+        processing: 'Đang xử lý...',
       },
       ocr: {
         badge: '✨ Gemini API (Miễn phí)',
