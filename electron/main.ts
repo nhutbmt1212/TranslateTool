@@ -4,6 +4,10 @@ import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 import { Translator } from '../src/translator.js';
 
+// Import electron-updater as CommonJS module
+import pkg from 'electron-updater';
+const { autoUpdater } = pkg;
+
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
@@ -65,8 +69,50 @@ function createWindow() {
   });
 }
 
+// Auto-updater configuration
+autoUpdater.autoDownload = false; // Không tự động download, để user chọn
+autoUpdater.autoInstallOnAppQuit = true;
+
+// Auto-updater events
+autoUpdater.on('checking-for-update', () => {
+  console.log('Checking for update...');
+  mainWindow?.webContents.send('update-checking');
+});
+
+autoUpdater.on('update-available', (info) => {
+  console.log('Update available:', info);
+  mainWindow?.webContents.send('update-available', info);
+});
+
+autoUpdater.on('update-not-available', (info) => {
+  console.log('Update not available:', info);
+  mainWindow?.webContents.send('update-not-available', info);
+});
+
+autoUpdater.on('error', (err) => {
+  console.error('Update error:', err);
+  mainWindow?.webContents.send('update-error', err);
+});
+
+autoUpdater.on('download-progress', (progressObj) => {
+  console.log('Download progress:', progressObj);
+  mainWindow?.webContents.send('update-download-progress', progressObj);
+});
+
+autoUpdater.on('update-downloaded', (info) => {
+  console.log('Update downloaded:', info);
+  mainWindow?.webContents.send('update-downloaded', info);
+});
+
 app.whenReady().then(() => {
   createWindow();
+
+  // Check for updates sau khi app ready (chỉ trong production)
+  if (!process.env.NODE_ENV || process.env.NODE_ENV === 'production') {
+    setTimeout(() => {
+      autoUpdater.checkForUpdates();
+    }, 3000); // Đợi 3 giây sau khi app mở
+  }
 
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) {
@@ -96,4 +142,33 @@ ipcMain.handle('translate', async (_event: any, text: string, targetLang: string
 
 ipcMain.handle('get-languages', async () => {
   return translator.getSupportedLanguages();
+});
+
+// Auto-updater IPC handlers
+ipcMain.handle('check-for-updates', async () => {
+  try {
+    const result = await autoUpdater.checkForUpdates();
+    return { success: true, data: result };
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Lỗi kiểm tra update',
+    };
+  }
+});
+
+ipcMain.handle('download-update', async () => {
+  try {
+    await autoUpdater.downloadUpdate();
+    return { success: true };
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Lỗi tải update',
+    };
+  }
+});
+
+ipcMain.handle('install-update', () => {
+  autoUpdater.quitAndInstall();
 });

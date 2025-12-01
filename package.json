@@ -1,6 +1,6 @@
 {
   "name": "dalit",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "DALIT - AI-powered translation platform",
   "main": "dist-electron/electron/main.js",
   "type": "module",
@@ -8,6 +8,7 @@
     "dev": "vite",
     "build:src": "tsc -p tsconfig.translator.json && tsc -p tsconfig.electron.json && tsc -p tsconfig.preload.json && vite build",
     "build": "npm run build:src && electron-builder build --win --x64 --dir",
+    "build:installer": "npm run build:src && electron-builder build --win --x64",
     "preview": "vite preview",
     "electron:dev": "concurrently \"npm run dev\" \"tsc -p tsconfig.translator.json --watch\" \"tsc -p tsconfig.electron.json --watch\" \"tsc -p tsconfig.preload.json --watch\" \"wait-on http://localhost:5173 && electron .\""
   },
@@ -39,6 +40,7 @@
     "@vitalets/google-translate-api": "^9.2.1",
     "chalk": "^5.3.0",
     "commander": "^11.1.0",
+    "electron-updater": "^6.6.2",
     "i18next": "^25.6.3",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
@@ -65,6 +67,11 @@
       "oneClick": false,
       "allowToChangeInstallationDirectory": true,
       "differentialPackage": false
+    },
+    "publish": {
+      "provider": "github",
+      "owner": "nhutbmt1212",
+      "repo": "TranslationTool"
     }
   }
 }
