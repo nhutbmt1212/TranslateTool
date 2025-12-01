@@ -115,6 +115,13 @@ const App: React.FC = () => {
   const inputChars = inputText.length;
   const outputChars = outputText.length;
 
+  // Clear output when input is cleared
+  useEffect(() => {
+    if (inputText.trim() === '') {
+      setOutputText('');
+    }
+  }, [inputText]);
+
   useEffect(() => {
     if (typeof document !== 'undefined') {
       document.documentElement.setAttribute('data-theme', theme);
@@ -170,17 +177,25 @@ const App: React.FC = () => {
   }, []); // Empty dependency array means this runs once on mount
 
   const handleSwapLanguages = () => {
+    // Always allow swapping languages for convenience
     if (sourceLang !== 'auto') {
+      // Normal swap when source is not auto
       const temp = sourceLang;
       setSourceLang(targetLang);
       setTargetLang(temp);
-      setInputText(outputText);
-      setOutputText(inputText);
+      // Swap text content if both exist
+      if (inputText || outputText) {
+        setInputText(outputText);
+        setOutputText(inputText);
+      }
     } else if (detectedLang !== 'auto') {
+      // Swap using detected language when source is auto
       setSourceLang(targetLang);
       setTargetLang(detectedLang);
-      setInputText(outputText);
-      setOutputText(inputText);
+      if (inputText || outputText) {
+        setInputText(outputText);
+        setOutputText(inputText);
+      }
     }
   };
 
@@ -329,7 +344,7 @@ const App: React.FC = () => {
                 onClick={handleSwapLanguages}
                 title={t('buttons.swapLanguages')}
                 aria-label={t('buttons.swapLanguages')}
-                disabled={!inputText || !outputText}
+                disabled={sourceLang === 'auto' && detectedLang === 'auto'}
               >
                 ⇆
               </button>
@@ -345,8 +360,6 @@ const App: React.FC = () => {
               copied={copyState.target}
             />
           </section>
-
-          <ImagePreview imagePreview={imagePreview} isProcessingOCR={isProcessingOCR} countdown={countdown} />
 
           <section className="action-bar">
             <button
@@ -364,30 +377,15 @@ const App: React.FC = () => {
             </button>
           </section>
 
-          <Toaster
-            position="top-center"
-            toastOptions={{
-              style: {
-                background: '#333',
-                color: '#fff',
-                borderRadius: '8px',
-                padding: '12px 16px',
-              },
-              success: {
-                iconTheme: {
-                  primary: '#10B981',
-                  secondary: '#fff',
-                },
-              },
-              error: {
-                iconTheme: {
-                  primary: '#EF4444',
-                  secondary: '#fff',
-                },
-              },
-            }}
-          />
         </main>
+
+        <ImagePreview 
+          imagePreview={imagePreview} 
+          isProcessingOCR={isProcessingOCR} 
+          countdown={countdown}
+          onClose={() => setImagePreview(null)}
+        />
+
         <LanguagePickerModal
           open={languagePickerOpen}
           mode={languagePickerMode}
@@ -415,6 +413,32 @@ const App: React.FC = () => {
           onClose={() => setSettingsOpen(false)}
         />
       </div>
+      <Toaster
+        position="top-center"
+        containerStyle={{
+          zIndex: 99999,
+        }}
+        toastOptions={{
+          style: {
+            background: '#333',
+            color: '#fff',
+            borderRadius: '8px',
+            padding: '12px 16px',
+          },
+          success: {
+            iconTheme: {
+              primary: '#10B981',
+              secondary: '#fff',
+            },
+          },
+          error: {
+            iconTheme: {
+              primary: '#EF4444',
+              secondary: '#fff',
+            },
+          },
+        }}
+      />
     </div>
   );
 };
