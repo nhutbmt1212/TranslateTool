@@ -1,8 +1,8 @@
 import { ApiKeyManager } from './apiKeyManager';
 import { createWorker } from 'tesseract.js';
 
-// Gemini model for translation only
-const GEMINI_MODEL = 'gemini-2.0-flash';
+// Gemini model for translation (lite version for speed)
+const GEMINI_MODEL = 'gemini-2.5-flash-lite';
 
 interface Point {
     x: number;
@@ -161,17 +161,15 @@ async function readAndTranslateWithGemini(
         _index: i, // For reference
     }));
 
-    const prompt = `You are given ${regions.length} cropped text images. For each image:
-1. Read the text accurately
-2. Translate from ${sourceLang} to ${targetLang}
+    const prompt = `You are an OCR tool. Each image contains a cropped text region from a document/screenshot.
+Your task:
+1. Read ONLY the visible text characters in each image (ignore any background, people, objects)
+2. Translate the text from ${sourceLang} to ${targetLang}
 
-Return ONLY a JSON array with translations in order:
-["translation1", "translation2", ...]
+IMPORTANT: Do NOT describe the image content. Only extract and translate the TEXT.
 
-Important:
-- Return exactly ${regions.length} translations
-- Keep the same order as the images
-- If text is unclear, make your best guess`;
+Return a JSON array with exactly ${regions.length} translated strings: ["translation1", "translation2", ...]
+If an image has no readable text, return empty string for that item.`;
 
     const response = await fetch(
         `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${apiKey}`,
@@ -185,7 +183,11 @@ Important:
                         ...imageParts.map(p => ({ inline_data: p.inline_data })),
                     ],
                 }],
-                generationConfig: { temperature: 0.1, maxOutputTokens: 4096 },
+                generationConfig: {
+                    temperature: 0,
+                    maxOutputTokens: 2048,
+                    responseMimeType: 'application/json',
+                },
             }),
         }
     );
@@ -196,10 +198,15 @@ Important:
     const textContent = data.candidates?.[0]?.content?.parts?.[0]?.text;
     if (!textContent) throw new Error('No response from Gemini');
 
-    const jsonMatch = textContent.match(/\[[\s\S]*\]/);
-    if (!jsonMatch) throw new Error('Invalid translation response');
-
-    return JSON.parse(jsonMatch[0]);
+    // Parse JSON response
+    try {
+        return JSON.parse(textContent);
+    } catch {
+        // Fallback: extract JSON array from text
+        const jsonMatch = textContent.match(/\[[\s\S]*\]/);
+        if (!jsonMatch) throw new Error('Invalid translation response');
+        return JSON.parse(jsonMatch[0]);
+    }
 }
 
 /**
