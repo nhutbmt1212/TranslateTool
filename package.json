@@ -1,16 +1,16 @@
 {
   "name": "dalit",
-  "version": "1.0.6",
+  "version": "1.0.7",
   "description": "DALIT - AI-powered translation platform",
   "main": "dist-electron/electron/main.js",
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build:src": "tsc -p tsconfig.translator.json && tsc -p tsconfig.electron.json && tsc -p tsconfig.preload.json && vite build",
+    "build:src": "tsc -p tsconfig.electron.json && tsc -p tsconfig.preload.json && vite build",
     "build": "npm run build:src && electron-builder build --win --x64 --dir",
     "build:installer": "npm run build:src && electron-builder build --win --x64",
     "preview": "vite preview",
-    "electron:dev": "concurrently \"npm run dev\" \"tsc -p tsconfig.translator.json --watch\" \"tsc -p tsconfig.electron.json --watch\" \"tsc -p tsconfig.preload.json --watch\" \"wait-on http://localhost:5173 && electron .\""
+    "electron:dev": "concurrently \"npm run dev\" \"tsc -p tsconfig.electron.json --watch\" \"tsc -p tsconfig.preload.json --watch\" \"wait-on http://localhost:5173 && electron .\""
   },
   "keywords": [
     "translate",

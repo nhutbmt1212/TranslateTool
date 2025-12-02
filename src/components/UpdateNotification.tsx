@@ -26,11 +26,10 @@ export function UpdateNotification() {
 
     // Listening to update events
     const removeChecking = window.electronAPI.onUpdateChecking(() => {
-      console.log('Đang kiểm tra update...');
+      // Update checking started
     });
 
     const removeAvailable = window.electronAPI.onUpdateAvailable((info: UpdateInfo) => {
-      console.log('Update có sẵn:', info);
       setUpdateAvailable(true);
       setUpdateInfo(info);
       toast.success(`Phiên bản mới ${info.version} đã có sẵn!`, {
@@ -39,22 +38,19 @@ export function UpdateNotification() {
     });
 
     const removeNotAvailable = window.electronAPI.onUpdateNotAvailable(() => {
-      console.log('Không có update mới');
+      // No update available
     });
 
     const removeError = window.electronAPI.onUpdateError((error: any) => {
-      console.error('Lỗi update:', error);
       toast.error('Lỗi khi kiểm tra update');
       setDownloading(false);
     });
 
     const removeProgress = window.electronAPI.onUpdateDownloadProgress((progress: DownloadProgress) => {
-      console.log('Download progress:', progress.percent);
       setDownloadProgress(Math.round(progress.percent));
     });
 
     const removeDownloaded = window.electronAPI.onUpdateDownloaded((info: UpdateInfo) => {
-      console.log('Update đã tải xong:', info);
       setDownloading(false);
       setUpdateReady(true);
       toast.success('Update đã sẵn sàng cài đặt!');
@@ -77,7 +73,6 @@ export function UpdateNotification() {
     try {
       await window.electronAPI.downloadUpdate();
     } catch (error) {
-      console.error('Lỗi khi tải update:', error);
       toast.error('Không thể tải update');
       setDownloading(false);
     }

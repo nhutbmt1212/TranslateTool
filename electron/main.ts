@@ -2,7 +2,6 @@
 import { app, BrowserWindow, ipcMain, screen } from 'electron';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
-import { Translator } from '../src/translator.js';
 
 // Import electron-updater as CommonJS module
 import pkg from 'electron-updater';
@@ -12,7 +11,6 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 let mainWindow: BrowserWindow | null = null;
-const translator = new Translator();
 
 function createWindow() {
   const { workArea } = screen.getPrimaryDisplay();
@@ -128,20 +126,18 @@ app.on('window-all-closed', () => {
 });
 
 // IPC Handlers
+// Translation is now handled in renderer process via Gemini API
+// These handlers are kept for backward compatibility but not used
 ipcMain.handle('translate', async (_event: any, text: string, targetLang: string, sourceLang?: string) => {
-  try {
-    const result = await translator.translate(text, targetLang, sourceLang);
-    return { success: true, data: result };
-  } catch (error) {
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : 'Lỗi không xác định',
-    };
-  }
+  return {
+    success: false,
+    error: 'Translation moved to renderer process',
+  };
 });
 
 ipcMain.handle('get-languages', async () => {
-  return translator.getSupportedLanguages();
+  // Return empty object, languages are loaded from JSON in renderer
+  return {};
 });
 
 ipcMain.handle('get-app-version', () => {
