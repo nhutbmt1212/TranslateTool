@@ -8,6 +8,7 @@ import TargetPanel from './components/TargetPanel';
 import LanguagePickerModal from './components/LanguagePickerModal';
 import ImagePreview from './components/ImagePreview';
 import SettingsModal from './components/SettingsModal';
+import ImageTranslator from './components/ImageTranslator';
 import { TranslateIcon } from './components/icons';
 import { Languages, LanguageMetadata } from './types/languages';
 import { uiLanguageOptions } from './i18n';
@@ -318,6 +319,7 @@ const App: React.FC = () => {
 
   return (
     <div className="app-shell">
+      <ImageTranslator />
       <div className="orb orb-one" aria-hidden="true" />
       <div className="orb orb-two" aria-hidden="true" />
       <div className="grid-overlay" aria-hidden="true" />

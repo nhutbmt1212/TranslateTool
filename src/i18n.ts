@@ -60,6 +60,10 @@ const resources = {
         save: 'Save',
         cancel: 'Cancel',
         saving: 'Saving...',
+        tabs: {
+          apiKey: 'API Key',
+          update: 'Update',
+        },
         apiKey: {
           title: 'Gemini API Key',
           description: 'Your API key is encrypted and stored securely on your device. It will remain saved until you clear it manually.',
@@ -101,6 +105,14 @@ const resources = {
           noUpdate: 'You are using the latest version',
           error: 'Update check failed',
           notAvailable: 'Update not available in this environment',
+          timeout: 'Timeout: Cannot connect to update server',
+          timeoutMessage: 'Update check took too long, please try again',
+          downloadFailed: 'Download failed. Retrying... ({{retry}}/3)',
+          downloadFailedFinal: 'Download failed after 3 attempts. Please check your network connection.',
+          downloadFailedRetry: 'Cannot download update. Please try again later.',
+          paused: 'Paused',
+          pauseToast: 'Download paused',
+          resumeToast: 'Resume download',
         },
       },
       general: {
@@ -170,6 +182,10 @@ const resources = {
         save: 'Lưu',
         cancel: 'Hủy',
         saving: 'Đang lưu...',
+        tabs: {
+          apiKey: 'Khóa API',
+          update: 'Cập nhật',
+        },
         apiKey: {
           title: 'Khóa API Gemini',
           description: 'Khóa API của bạn được mã hóa và lưu trữ an toàn trên thiết bị. Nó sẽ được giữ lại cho đến khi bạn xóa thủ công.',
@@ -211,6 +227,14 @@ const resources = {
           noUpdate: 'Bạn đang sử dụng phiên bản mới nhất',
           error: 'Lỗi kiểm tra cập nhật',
           notAvailable: 'Cập nhật không khả dụng trong môi trường này',
+          timeout: 'Timeout: Không thể kết nối đến server update',
+          timeoutMessage: 'Kiểm tra update quá lâu, vui lòng thử lại',
+          downloadFailed: 'Download thất bại. Đang thử lại... ({{retry}}/3)',
+          downloadFailedFinal: 'Download thất bại sau 3 lần thử. Vui lòng kiểm tra kết nối mạng.',
+          downloadFailedRetry: 'Không thể tải update. Vui lòng thử lại sau.',
+          paused: 'Đã tạm dừng',
+          pauseToast: 'Download đã tạm dừng',
+          resumeToast: 'Tiếp tục download',
         },
       },
       general: {

@@ -61,12 +61,14 @@
     "win": {
       "target": "nsis",
       "verifyUpdateCodeSignature": false,
-      "sign": null
+      "sign": null,
+      "artifactName": "${productName}-Setup-${version}.${ext}"
     },
     "nsis": {
       "oneClick": false,
       "allowToChangeInstallationDirectory": true,
-      "differentialPackage": false
+      "differentialPackage": false,
+      "artifactName": "${productName}-Setup-${version}.${ext}"
     },
     "publish": {
       "provider": "github",

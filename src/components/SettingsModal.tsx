@@ -40,6 +40,8 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ open, onClose }) => {
     const [updateReady, setUpdateReady] = useState(false);
     const [updateError, setUpdateError] = useState<string | null>(null);
     const [appVersion, setAppVersion] = useState('1.0.0');
+    const [downloadRetries, setDownloadRetries] = useState(0);
+    const [isPaused, setIsPaused] = useState(false);
 
     useEffect(() => {
         if (open) {
@@ -152,27 +154,71 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ open, onClose }) => {
         setCheckingUpdate(true);
         setUpdateError(null);
         setUpdateAvailable(false);
+
+        // Timeout sau 30 giây
+        const timeoutId = setTimeout(() => {
+            setCheckingUpdate(false);
+            setUpdateError(t('settings.update.timeout') || 'Timeout: Cannot connect to update server');
+            toast.error(t('settings.update.timeoutMessage') || 'Update check took too long, please try again');
+        }, 30000);
+
         try {
             const result = await window.electronAPI.checkForUpdates();
+            clearTimeout(timeoutId);
             if (!result.success) {
                 setUpdateError(result.error || t('settings.update.error'));
                 setCheckingUpdate(false);
             }
         } catch (error) {
+            clearTimeout(timeoutId);
             setUpdateError(t('settings.update.error') || 'Update check failed');
             setCheckingUpdate(false);
         }
     };
 
-    const handleDownloadUpdate = async () => {
+    const handleDownloadUpdate = async (isRetry = false) => {
         if (!window.electronAPI?.downloadUpdate) return;
+        
+        if (!isRetry) {
+            setDownloadRetries(0);
+        }
+        
         setDownloading(true);
         setDownloadProgress(0);
+        setIsPaused(false);
+        setUpdateError(null);
+
         try {
             await window.electronAPI.downloadUpdate();
         } catch (error) {
-            toast.error(t('settings.update.error') || 'Download failed');
             setDownloading(false);
+            
+            // Retry mechanism - tối đa 3 lần
+            if (downloadRetries < 3) {
+                const retryCount = downloadRetries + 1;
+                setDownloadRetries(retryCount);
+                toast.error(t('settings.update.downloadFailed', { retry: retryCount }) || `Download failed. Retrying... (${retryCount}/3)`);
+                
+                // Đợi 2 giây trước khi retry
+                setTimeout(() => {
+                    handleDownloadUpdate(true);
+                }, 2000);
+            } else {
+                setUpdateError(t('settings.update.downloadFailedFinal') || 'Download failed after 3 attempts. Please check your network connection.');
+                toast.error(t('settings.update.downloadFailedRetry') || 'Cannot download update. Please try again later.');
+                setDownloadRetries(0);
+            }
+        }
+    };
+
+    const handlePauseResume = () => {
+        // Note: electron-updater không hỗ trợ pause/resume native
+        // Đây là UI placeholder, thực tế cần implement custom download logic
+        setIsPaused(!isPaused);
+        if (!isPaused) {
+            toast(t('settings.update.pauseToast') || 'Download paused', { icon: '⏸️' });
+        } else {
+            toast(t('settings.update.resumeToast') || 'Resume download', { icon: '▶️' });
         }
     };
 
@@ -202,7 +248,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ open, onClose }) => {
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                             <path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4" />
                         </svg>
-                        API Key
+                        {t('settings.tabs.apiKey') || 'API Key'}
                     </button>
                     <button
                         className={`settings-tab ${activeTab === 'update' ? 'active' : ''}`}
@@ -213,7 +259,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ open, onClose }) => {
                             <polyline points="7 10 12 15 17 10" />
                             <line x1="12" y1="15" x2="12" y2="3" />
                         </svg>
-                        Update
+                        {t('settings.tabs.update') || 'Update'}
                     </button>
                 </div>
 
@@ -391,14 +437,28 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ open, onClose }) => {
 
                             {downloading && (
                                 <div className="update-progress-box">
-                                    <div className="update-progress-label">{t('settings.update.downloading') || 'Downloading update...'}</div>
+                                    <div className="update-progress-header">
+                                        <div className="update-progress-label">
+                                            {isPaused ? `⏸️ ${t('settings.update.paused') || 'Paused'}` : t('settings.update.downloading') || 'Downloading update...'}
+                                        </div>
+                                        <button 
+                                            className="pause-resume-button"
+                                            onClick={handlePauseResume}
+                                            title={isPaused ? 'Resume' : 'Pause'}
+                                        >
+                                            {isPaused ? '▶️' : '⏸️'}
+                                        </button>
+                                    </div>
                                     <div className="update-progress-bar">
                                         <div
                                             className="update-progress-fill"
                                             style={{ width: `${downloadProgress}%` }}
                                         />
                                     </div>
-                                    <div className="update-progress-text">{downloadProgress}%</div>
+                                    <div className="update-progress-text">
+                                        {downloadProgress}%
+                                        {downloadRetries > 0 && ` (Retry ${downloadRetries}/3)`}
+                                    </div>
                                 </div>
                             )}
 
@@ -469,7 +529,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ open, onClose }) => {
                                 <button
                                     type="button"
                                     className="settings-save-button"
-                                    onClick={handleDownloadUpdate}
+                                    onClick={() => handleDownloadUpdate(false)}
                                 >
                                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                                         <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />

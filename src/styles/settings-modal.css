@@ -472,11 +472,33 @@
     margin-bottom: 16px;
 }
 
+.update-progress-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+}
+
 .update-progress-label {
     font-size: 14px;
     color: var(--text-primary);
-    margin-bottom: 12px;
     font-weight: 500;
+}
+
+.pause-resume-button {
+    background: transparent;
+    border: 1px solid var(--control-border);
+    color: var(--text-primary);
+    padding: 4px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: all 0.2s ease;
+}
+
+.pause-resume-button:hover {
+    background: var(--control-bg);
+    border-color: var(--accent);
 }
 
 .update-progress-bar {
