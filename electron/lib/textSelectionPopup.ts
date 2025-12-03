@@ -4,6 +4,7 @@ import {
   globalShortcut,
   screen,
   ipcMain,
+  app,
 } from 'electron';
 import {
   uIOhook,
@@ -11,6 +12,9 @@ import {
   UiohookMouseEvent,
   UiohookKeyboardEvent,
 } from 'uiohook-napi';
+import activeWin from 'active-win';
+import * as fs from 'fs';
+import * as path from 'path';
 import { PATHS } from './constants.js';
 import { getMainWindow } from './windowManager.js';
 
@@ -40,6 +44,17 @@ let popupWindow: BrowserWindow | null = null;
 let lastClipboardText = '';
 let isSelectionMonitoringEnabled = false;
 let isSelectionMonitoringPaused = false;
+
+// Text Selection Ignore Config
+interface TextSelectionIgnoreConfig {
+  ignoredApplications: string[];
+  enabled: boolean;
+}
+
+let ignoreConfig: TextSelectionIgnoreConfig = {
+  ignoredApplications: [],
+  enabled: true,
+};
 
 // Mouse tracking
 let isMouseDown = false;
@@ -143,6 +158,52 @@ function isWindowSwitchKey(e: UiohookKeyboardEvent): boolean {
 
 function isPopupActive(): boolean {
   return popupWindow !== null && !popupWindow.isDestroyed();
+}
+
+// ============================================================================
+// Ignore Config Management
+// ============================================================================
+function loadIgnoreConfig(): void {
+  try {
+    const configPath = path.join(app.getPath('userData'), 'textSelectionIgnore.json');
+    
+    if (fs.existsSync(configPath)) {
+      const data = fs.readFileSync(configPath, 'utf-8');
+      ignoreConfig = JSON.parse(data);
+    }
+  } catch (error) {
+    console.error('Failed to load text selection ignore config:', error);
+  }
+}
+
+async function shouldIgnoreCurrentWindow(): Promise<boolean> {
+  // If feature is disabled, don't ignore
+  if (!ignoreConfig.enabled) {
+    return false;
+  }
+
+  // If no apps in ignore list, don't ignore
+  if (ignoreConfig.ignoredApplications.length === 0) {
+    return false;
+  }
+
+  try {
+    const activeWindow = await activeWin();
+    
+    if (!activeWindow || !activeWindow.owner) {
+      return false;
+    }
+
+    const activeAppName = activeWindow.owner.name.toLowerCase();
+    
+    // Check if active app is in ignore list
+    return ignoreConfig.ignoredApplications.some(
+      (app) => activeAppName.includes(app.toLowerCase().replace('.exe', ''))
+    );
+  } catch (error) {
+    console.error('Failed to get active window:', error);
+    return false;
+  }
 }
 
 
@@ -257,14 +318,20 @@ function shouldSkipAutoCopy(): boolean {
   return isCtrlPressed || Date.now() - ctrlPressTime < CTRL_PRIORITY_WINDOW;
 }
 
-function simulateCopy(): void {
+async function simulateCopy(): Promise<void> {
   if (isCtrlPressed) return;
 
   copyDebounceTimeout = clearTimeoutSafe(copyDebounceTimeout);
-  copyDebounceTimeout = setTimeout(() => {
+  copyDebounceTimeout = setTimeout(async () => {
     copyDebounceTimeout = null;
 
     if (shouldSkipAutoCopy()) return;
+
+    // Check if current window should be ignored
+    const shouldIgnore = await shouldIgnoreCurrentWindow();
+    if (shouldIgnore) {
+      return;
+    }
 
     if (isPopupActive()) {
       hidePopup(false);
@@ -364,6 +431,9 @@ function handleKeyUp(e: UiohookKeyboardEvent): void {
 function startSelectionMonitoring(): void {
   if (isSelectionMonitoringEnabled) return;
 
+  // Load ignore config when starting monitoring
+  loadIgnoreConfig();
+
   isSelectionMonitoringEnabled = true;
 
   uIOhook.on('mousedown', (e) => handleMouseDown(e));
@@ -437,6 +507,13 @@ function handlePopupClick(): void {
 }
 
 // ============================================================================
+// Config Reload
+// ============================================================================
+function reloadIgnoreConfig(): void {
+  loadIgnoreConfig();
+}
+
+// ============================================================================
 // IPC Registration
 // ============================================================================
 export function registerTextSelectionIPC(): void {
@@ -445,6 +522,7 @@ export function registerTextSelectionIPC(): void {
   ipcMain.handle('text-selection:start-monitoring', startSelectionMonitoring);
   ipcMain.handle('text-selection:stop-monitoring', stopSelectionMonitoring);
   ipcMain.handle('text-selection:is-monitoring', isMonitoringActive);
+  ipcMain.handle('text-selection:reload-ignore-config', reloadIgnoreConfig);
   ipcMain.on('text-selection:popup-click', handlePopupClick);
 
   registerTextSelectionShortcut();
@@ -467,4 +545,5 @@ export {
   isMonitoringActive,
   pauseSelectionMonitoring,
   resumeSelectionMonitoring,
+  reloadIgnoreConfig,
 };

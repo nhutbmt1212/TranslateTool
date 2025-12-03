@@ -50,15 +50,21 @@ export interface ElectronAPI {
     hidePopup: () => Promise<void>;
     startMonitoring: () => Promise<void>;
     stopMonitoring: () => Promise<void>;
+    reloadIgnoreConfig: () => Promise<void>;
     onPopupClick: () => void;
   };
 
   // Text selection translate event listener
   onTextSelectionTranslate: (callback: (text: string) => void) => () => void;
+
+  // Text Selection Ignore Config APIs
+  getTextSelectionIgnoreConfig: () => Promise<{ ignoredApplications: string[]; enabled: boolean }>;
+  saveTextSelectionIgnoreConfig: (config: { ignoredApplications: string[]; enabled: boolean }) => Promise<void>;
 }
 
 declare global {
   interface Window {
+    electron: ElectronAPI;
     electronAPI: ElectronAPI;
   }
 }
