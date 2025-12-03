@@ -1,6 +1,9 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { CopyIcon, CheckIcon } from './icons';
+import toast from 'react-hot-toast';
+import { CopyIcon, CheckIcon, SpeakerIcon, SpeakerOffIcon } from './icons';
+import { responsiveVoiceTTS, languageToTTSCode } from '../utils/responsiveVoiceTTS';
+
 interface TargetPanelProps {
   targetLang: string;
   outputText: string;
@@ -21,6 +24,30 @@ const TargetPanel: React.FC<TargetPanelProps> = ({
   copied,
 }) => {
   const { t } = useTranslation();
+  const [isSpeaking, setIsSpeaking] = useState(false);
+
+  const handleSpeak = async () => {
+    if (!outputText) return;
+
+    if (isSpeaking) {
+      responsiveVoiceTTS.stop();
+      setIsSpeaking(false);
+      return;
+    }
+
+    setIsSpeaking(true);
+    
+    try {
+      const ttsLang = languageToTTSCode[targetLang] || targetLang;
+      await responsiveVoiceTTS.speak(outputText, ttsLang);
+    } catch (error) {
+      if (error instanceof Error) {
+        toast.error(error.message);
+      }
+    } finally {
+      setIsSpeaking(false);
+    }
+  };
 
   return (
     <div className="translation-box target-box">
@@ -39,6 +66,15 @@ const TargetPanel: React.FC<TargetPanelProps> = ({
       />
       <div className="box-footer target-footer simple-footer">
         <div className="target-footer-left">
+          <button
+            type="button"
+            className="icon-button simple-icon-button"
+            onClick={handleSpeak}
+            title={isSpeaking ? 'Stop' : 'Listen'}
+            disabled={!outputText}
+          >
+            {isSpeaking ? <SpeakerOffIcon size={18} /> : <SpeakerIcon size={18} />}
+          </button>
           <button
             type="button"
             className="icon-button simple-icon-button"

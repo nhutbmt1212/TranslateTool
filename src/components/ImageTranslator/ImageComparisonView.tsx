@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import ImageLightbox from './ImageLightbox';
 
 interface ImageComparisonViewProps {
@@ -10,6 +11,7 @@ const ImageComparisonView: React.FC<ImageComparisonViewProps> = ({
   originalImage,
   translatedImage,
 }) => {
+  const { t } = useTranslation();
   const [lightboxImage, setLightboxImage] = useState<string | null>(null);
 
   const handleImageClick = (image: string) => {
@@ -21,7 +23,7 @@ const ImageComparisonView: React.FC<ImageComparisonViewProps> = ({
       <div className="image-translator-preview">
         <div className="image-comparison">
           <div className="image-box">
-            <p className="image-label">Original</p>
+            <p className="image-label">{t('imageTranslator.original')}</p>
             <img
               src={originalImage}
               alt="Original"
@@ -33,7 +35,7 @@ const ImageComparisonView: React.FC<ImageComparisonViewProps> = ({
           </div>
           {translatedImage && (
             <div className="image-box">
-              <p className="image-label">Translated</p>
+              <p className="image-label">{t('imageTranslator.translated')}</p>
               <img
                 src={translatedImage}
                 alt="Translated"

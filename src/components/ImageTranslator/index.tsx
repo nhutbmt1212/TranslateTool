@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useImageTranslation } from '../../hooks/useImageTranslation';
 import ImageUploadZone from './ImageUploadZone';
 import ImageComparisonView from './ImageComparisonView';
 import '../../styles/image-translator.css';
 
 const ImageTranslator: React.FC = () => {
+  const { t } = useTranslation();
   const [isOpen, setIsOpen] = useState(false);
   const {
     selectedImage,
@@ -40,8 +42,8 @@ const ImageTranslator: React.FC = () => {
           <div className="image-translator-modal" onClick={(e) => e.stopPropagation()}>
             <div className="image-translator-header">
               <div>
-                <h3>🖼️ Image Translator</h3>
-                <p className="image-translator-subtitle">Translate text in images</p>
+                <h3>🖼️ {t('imageTranslator.title')}</h3>
+                <p className="image-translator-subtitle">{t('imageTranslator.subtitle')}</p>
               </div>
               <button
                 className="image-translator-close"
@@ -74,7 +76,7 @@ const ImageTranslator: React.FC = () => {
                       <polyline points="1 4 1 10 7 10" />
                       <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10" />
                     </svg>
-                    Reset
+                    {t('imageTranslator.reset')}
                   </button>
                   {translatedImage ? (
                     <button className="btn-download-image" onClick={handleDownload}>
@@ -83,14 +85,14 @@ const ImageTranslator: React.FC = () => {
                         <polyline points="7 10 12 15 17 10" />
                         <line x1="12" y1="15" x2="12" y2="3" />
                       </svg>
-                      Download
+                      {t('imageTranslator.download')}
                     </button>
                   ) : (
                     <button className="btn-translate-image" onClick={handleTranslate} disabled={isProcessing}>
                       {isProcessing ? (
                         <>
                           <span className="button-spinner" />
-                          Processing...
+                          {t('imageTranslator.processing')}
                         </>
                       ) : (
                         <>
@@ -98,7 +100,7 @@ const ImageTranslator: React.FC = () => {
                             <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
                             <path d="M9 12l2 2 4-4" />
                           </svg>
-                          Translate
+                          {t('imageTranslator.translate')}
                         </>
                       )}
                     </button>
@@ -110,19 +112,19 @@ const ImageTranslator: React.FC = () => {
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                       <polyline points="20 6 9 17 4 12" />
                     </svg>
-                    <span>Detect text in image</span>
+                    <span>{t('imageTranslator.feature1')}</span>
                   </div>
                   <div className="feature-item">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                       <polyline points="20 6 9 17 4 12" />
                     </svg>
-                    <span>Translate to target language</span>
+                    <span>{t('imageTranslator.feature2')}</span>
                   </div>
                   <div className="feature-item">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                       <polyline points="20 6 9 17 4 12" />
                     </svg>
-                    <span>Replace text in original image</span>
+                    <span>{t('imageTranslator.feature3')}</span>
                   </div>
                 </div>
               )}

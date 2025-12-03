@@ -193,7 +193,8 @@
 }
 
 .box-footer {
-  display: none;
+  display: flex;
+  align-items: center;
 }
 
 .target-footer {

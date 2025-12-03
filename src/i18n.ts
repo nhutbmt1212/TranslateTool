@@ -47,6 +47,21 @@ const resources = {
       ocr: {
         badge: '✨ Gemini API (Free)',
       },
+      imageTranslator: {
+        title: 'Image Translator',
+        subtitle: 'Translate text in images',
+        uploadText: 'Click to upload image',
+        uploadHint: 'PNG, JPG, JPEG up to 10MB',
+        original: 'Original',
+        translated: 'Translated',
+        reset: 'Reset',
+        translate: 'Translate',
+        download: 'Download',
+        processing: 'Processing...',
+        feature1: 'Detect text in image',
+        feature2: 'Translate to target language',
+        feature3: 'Replace text in original image',
+      },
       languagePicker: {
         titleSource: 'Select source language',
         titleTarget: 'Select target language',
@@ -168,6 +183,21 @@ const resources = {
       },
       ocr: {
         badge: '✨ Gemini API (Miễn phí)',
+      },
+      imageTranslator: {
+        title: 'Dịch ảnh',
+        subtitle: 'Dịch văn bản trong ảnh',
+        uploadText: 'Click để tải ảnh lên',
+        uploadHint: 'PNG, JPG, JPEG tối đa 10MB',
+        original: 'Gốc',
+        translated: 'Đã dịch',
+        reset: 'Đặt lại',
+        translate: 'Dịch',
+        download: 'Tải xuống',
+        processing: 'Đang xử lý...',
+        feature1: 'Phát hiện văn bản trong ảnh',
+        feature2: 'Dịch sang ngôn ngữ đích',
+        feature3: 'Thay thế văn bản trong ảnh gốc',
       },
       languagePicker: {
         titleSource: 'Chọn ngôn ngữ nguồn',
