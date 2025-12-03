@@ -1,12 +1,10 @@
-import React from 'react';
+import React, { useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Languages } from '../types/languages';
 import { CopyIcon, CheckIcon, SpeakerIcon, SpeakerOffIcon } from './icons';
 import { useTextToSpeech } from '../hooks/useTextToSpeech';
 
 interface SourcePanelProps {
   sourceLang: string;
-  languages: Languages;
   inputText: string;
   detectedLang: string;
   charCount: number;
@@ -19,7 +17,6 @@ interface SourcePanelProps {
 
 const SourcePanel: React.FC<SourcePanelProps> = ({
   sourceLang,
-  languages,
   inputText,
   detectedLang,
   charCount,
@@ -32,9 +29,9 @@ const SourcePanel: React.FC<SourcePanelProps> = ({
   const { t } = useTranslation();
   const { isSpeaking, triggerTTS } = useTextToSpeech();
 
-  const handleSpeak = async () => {
+  const handleSpeak = useCallback(async () => {
     await triggerTTS(inputText, sourceLang, detectedLang);
-  };
+  }, [triggerTTS, inputText, sourceLang, detectedLang]);
 
   return (
     <div className="translation-box source-box">

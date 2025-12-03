@@ -8,7 +8,6 @@ interface UpdateInfo {
 
 interface UpdateSectionProps {
   appVersion: string;
-  checkingUpdate: boolean;
   updateAvailable: boolean;
   updateInfo: UpdateInfo | null;
   downloading: boolean;
@@ -22,7 +21,6 @@ interface UpdateSectionProps {
 
 const UpdateSection: React.FC<UpdateSectionProps> = ({
   appVersion,
-  checkingUpdate,
   updateAvailable,
   updateInfo,
   downloading,

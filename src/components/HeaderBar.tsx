@@ -1,10 +1,9 @@
-import React from 'react';
+import React, { useCallback, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { GlobeIcon, ChevronDownIcon, MoonIcon, SunIcon, SettingsIcon } from './icons';
 import { useDropdown } from '../hooks/useDropdown';
 
 interface HeaderBarProps {
-  onOpenLanguagePicker: () => void;
   uiLanguageOptions: { code: string; label: string }[];
   currentUiLanguage: string;
   onUiLanguageChange: (code: string) => void;
@@ -14,7 +13,6 @@ interface HeaderBarProps {
 }
 
 const HeaderBar: React.FC<HeaderBarProps> = ({
-  onOpenLanguagePicker,
   uiLanguageOptions,
   currentUiLanguage,
   onUiLanguageChange,
@@ -25,19 +23,23 @@ const HeaderBar: React.FC<HeaderBarProps> = ({
   const { t } = useTranslation();
   const dropdown = useDropdown();
 
-  const currentLabel =
+  const currentLabel = useMemo(() =>
     uiLanguageOptions.find((option) => option.code === currentUiLanguage)?.label ||
-    currentUiLanguage;
+    currentUiLanguage,
+    [uiLanguageOptions, currentUiLanguage]
+  );
 
-  const handleUiMenuSelect = (code: string) => {
+  const handleUiMenuSelect = useCallback((code: string) => {
     onUiLanguageChange(code);
     dropdown.close();
-  };
+  }, [onUiLanguageChange, dropdown]);
 
-  const themeToggleLabel =
+  const themeToggleLabel = useMemo(() =>
     theme === 'light'
       ? t('header.switchDark', 'Switch to dark mode')
-      : t('header.switchLight', 'Switch to light mode');
+      : t('header.switchLight', 'Switch to light mode'),
+    [theme, t]
+  );
 
   return (
     <header className="header hero-banner">

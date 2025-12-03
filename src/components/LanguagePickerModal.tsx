@@ -1,7 +1,8 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useCallback, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Languages } from '../types/languages';
 import { useLanguageSearch } from '../hooks/useLanguageSearch';
+import ErrorBoundary from './ErrorBoundary';
 
 type PickerMode = 'source' | 'target';
 
@@ -17,7 +18,7 @@ interface LanguagePickerModalProps {
   onSelectTarget: (code: string) => void;
 }
 
-const LanguagePickerModal: React.FC<LanguagePickerModalProps> = ({
+const LanguagePickerModalContent: React.FC<LanguagePickerModalProps> = ({
   open,
   mode,
   languages,
@@ -45,23 +46,26 @@ const LanguagePickerModal: React.FC<LanguagePickerModalProps> = ({
     autoDetectLabel,
   });
 
-  const handleSelect = (code: string) => {
+  const handleSelect = useCallback((code: string) => {
     if (mode === 'source') {
       onSelectSource(code);
     } else {
       onSelectTarget(code);
     }
     onClose();
-  };
+  }, [mode, onSelectSource, onSelectTarget, onClose]);
 
-  const isDisabled = (code: string) => {
+  const isDisabled = useCallback((code: string) => {
     if (mode === 'source') {
       return code === targetLang;
     }
     return sourceLang !== 'auto' && code === sourceLang;
-  };
+  }, [mode, targetLang, sourceLang]);
 
-  const titleKey = mode === 'source' ? 'languagePicker.titleSource' : 'languagePicker.titleTarget';
+  const titleKey = useMemo(() => 
+    mode === 'source' ? 'languagePicker.titleSource' : 'languagePicker.titleTarget',
+    [mode]
+  );
 
   // Clear search term when modal opens
   useEffect(() => {
@@ -70,41 +74,41 @@ const LanguagePickerModal: React.FC<LanguagePickerModalProps> = ({
     }
   }, [open, clearSearch]);
 
+  const handleKeyDown = useCallback((event: KeyboardEvent) => {
+    if (event.key === 'Escape') {
+      onClose();
+      return;
+    }
+
+    const target = event.target as HTMLElement | null;
+    const isInputFocused = target && inputRef.current && inputRef.current.contains(target);
+    if (isInputFocused) {
+      return;
+    }
+
+    if (event.ctrlKey || event.altKey || event.metaKey) {
+      return;
+    }
+
+    if (event.key.length === 1) {
+      if (isLetterKey(event.key)) {
+        event.preventDefault();
+        inputRef.current?.focus();
+        setSearchTerm((prev: string) => sanitizeInput(`${prev}${event.key}`));
+      } else {
+        event.preventDefault();
+      }
+    }
+  }, [onClose, isLetterKey, sanitizeInput, setSearchTerm]);
+
   useEffect(() => {
     if (!open) return undefined;
-
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') {
-        onClose();
-        return;
-      }
-
-      const target = event.target as HTMLElement | null;
-      const isInputFocused = target && inputRef.current && inputRef.current.contains(target);
-      if (isInputFocused) {
-        return;
-      }
-
-      if (event.ctrlKey || event.altKey || event.metaKey) {
-        return;
-      }
-
-      if (event.key.length === 1) {
-        if (isLetterKey(event.key)) {
-          event.preventDefault();
-          inputRef.current?.focus();
-          setSearchTerm((prev: string) => sanitizeInput(`${prev}${event.key}`));
-        } else {
-          event.preventDefault();
-        }
-      }
-    };
 
     document.addEventListener('keydown', handleKeyDown);
     return () => {
       document.removeEventListener('keydown', handleKeyDown);
     };
-  }, [open, onClose, isLetterKey, sanitizeInput]);
+  }, [open, handleKeyDown]);
 
   if (!open) return null;
 
@@ -158,6 +162,14 @@ const LanguagePickerModal: React.FC<LanguagePickerModalProps> = ({
         </div>
       </div>
     </div>
+  );
+};
+
+const LanguagePickerModal: React.FC<LanguagePickerModalProps> = (props) => {
+  return (
+    <ErrorBoundary>
+      <LanguagePickerModalContent {...props} />
+    </ErrorBoundary>
   );
 };
 

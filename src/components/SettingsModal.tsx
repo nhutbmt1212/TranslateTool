@@ -92,7 +92,6 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ open, onClose }) => {
           {activeTab === 'update' && (
             <UpdateSection
               appVersion={appVersion}
-              checkingUpdate={checkingUpdate}
               updateAvailable={updateAvailable}
               updateInfo={updateInfo}
               downloading={downloading}
