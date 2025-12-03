@@ -49,5 +49,16 @@ contextBridge.exposeInMainWorld('electronAPI', {
 
   // Overlay result (for overlay window)
   overlayResult: (result: any) => ipcRenderer.send('overlay-result', result),
+
+  // System Tray APIs
+  minimizeToTray: () => ipcRenderer.invoke('minimize-to-tray'),
+  showWindow: () => ipcRenderer.invoke('show-window'),
+  quitApp: () => ipcRenderer.invoke('quit-app'),
+  
+  // Listen for tray events
+  onTriggerScreenCapture: (callback: () => void) => {
+    ipcRenderer.on('trigger-screen-capture', callback);
+    return () => ipcRenderer.removeListener('trigger-screen-capture', callback);
+  },
 });
 

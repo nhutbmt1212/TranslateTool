@@ -46,6 +46,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ open, onClose }) => {
     handleCheckUpdate,
     handleDownloadUpdate,
     handlePauseResume,
+    handleCancelDownload,
     handleInstallUpdate,
     loadAppVersion,
   } = useUpdateSettings();
@@ -101,6 +102,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ open, onClose }) => {
               downloadRetries={downloadRetries}
               isPaused={isPaused}
               onPauseResume={handlePauseResume}
+              onCancelDownload={handleCancelDownload}
             />
           )}
         </div>

@@ -26,6 +26,7 @@ interface UseUpdateSettingsReturn {
   handleCheckUpdate: () => Promise<void>;
   handleDownloadUpdate: (isRetry?: boolean) => Promise<void>;
   handlePauseResume: () => void;
+  handleCancelDownload: () => void;
   handleInstallUpdate: () => void;
   loadAppVersion: () => Promise<void>;
 }
@@ -168,16 +169,22 @@ export const useUpdateSettings = (): UseUpdateSettingsReturn => {
     }
   }, [downloadRetries]);
 
+  const handleCancelDownload = useCallback(() => {
+    // Hủy download bằng cách reset states
+    setDownloading(false);
+    setDownloadProgress(0);
+    setIsPaused(false);
+    setUpdateError(null);
+    setDownloadRetries(0);
+    toast('Download cancelled', { icon: '❌' });
+  }, []);
+
   const handlePauseResume = useCallback(() => {
     // Note: electron-updater không hỗ trợ pause/resume native
-    // Đây là UI placeholder, thực tế cần implement custom download logic
-    setIsPaused(!isPaused);
-    if (!isPaused) {
-      toast('Download paused', { icon: '⏸️' });
-    } else {
-      toast('Resume download', { icon: '▶️' });
-    }
-  }, [isPaused]);
+    // Tạm thời disable tính năng này để tránh confusion
+    toast.error('Pause/Resume không được hỗ trợ. Vui lòng hủy và tải lại nếu cần.');
+    return;
+  }, []);
 
   const handleInstallUpdate = useCallback(() => {
     if (!window.electronAPI?.installUpdate) return;
@@ -198,6 +205,7 @@ export const useUpdateSettings = (): UseUpdateSettingsReturn => {
     handleCheckUpdate,
     handleDownloadUpdate,
     handlePauseResume,
+    handleCancelDownload,
     handleInstallUpdate,
     loadAppVersion,
   };

@@ -17,6 +17,7 @@ interface UpdateSectionProps {
   downloadRetries: number;
   isPaused: boolean;
   onPauseResume: () => void;
+  onCancelDownload: () => void;
 }
 
 const UpdateSection: React.FC<UpdateSectionProps> = ({
@@ -30,6 +31,7 @@ const UpdateSection: React.FC<UpdateSectionProps> = ({
   downloadRetries,
   isPaused,
   onPauseResume,
+  onCancelDownload,
 }) => {
   const { t } = useTranslation();
 
@@ -77,14 +79,14 @@ const UpdateSection: React.FC<UpdateSectionProps> = ({
         <div className="update-progress-box">
           <div className="update-progress-header">
             <div className="update-progress-label">
-              {isPaused ? `⏸️ ${t('settings.update.paused') || 'Paused'}` : t('settings.update.downloading') || 'Downloading update...'}
+              {t('settings.update.downloading') || 'Downloading update...'}
             </div>
             <button 
-              className="pause-resume-button"
-              onClick={onPauseResume}
-              title={isPaused ? 'Resume' : 'Pause'}
+              className="cancel-download-button"
+              onClick={onCancelDownload}
+              title={t('settings.update.cancel') || 'Cancel download'}
             >
-              {isPaused ? '▶️' : '⏸️'}
+              ❌
             </button>
           </div>
           <div className="update-progress-bar">

@@ -18,6 +18,7 @@ const UpdateNotificationContent: React.FC = () => {
     handleInstall,
     handleDismiss,
     handlePauseResume,
+    handleCancelDownload,
   } = useUpdateNotification();
 
   // Show error state if any
@@ -86,11 +87,11 @@ const UpdateNotificationContent: React.FC = () => {
             <div className="progress-info">
               <span className="progress-text">{downloadProgress}%</span>
               <button 
-                onClick={handlePauseResume} 
-                className="btn-pause-resume"
-                title={isPaused ? t('update.notification.resume', 'Resume') : t('update.notification.pause', 'Pause')}
+                onClick={handleCancelDownload} 
+                className="btn-cancel-download"
+                title={t('update.notification.cancel', 'Cancel download')}
               >
-                {isPaused ? '▶️' : '⏸️'}
+                ❌
               </button>
             </div>
           </div>

@@ -35,6 +35,14 @@ export interface ElectronAPI {
 
   // Overlay result (for overlay window)
   overlayResult?: (result: any) => void;
+
+  // System Tray APIs
+  minimizeToTray: () => Promise<void>;
+  showWindow: () => Promise<void>;
+  quitApp: () => Promise<void>;
+  
+  // Tray event listeners
+  onTriggerScreenCapture: (callback: () => void) => () => void;
 }
 
 declare global {

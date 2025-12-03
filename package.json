@@ -1,6 +1,6 @@
 {
   "name": "dalit",
-  "version": "1.0.9",
+  "version": "1.1.0",
   "description": "DALIT - AI-powered translation platform",
   "main": "dist-electron/electron/main.js",
   "type": "module",
@@ -62,10 +62,17 @@
       "dist-electron/**/*",
       "dist/**/*"
     ],
+    "extraResources": [
+      {
+        "from": "release/.icon-ico/icon.ico",
+        "to": "icon.ico"
+      }
+    ],
     "win": {
       "target": "nsis",
       "verifyUpdateCodeSignature": false,
       "sign": null,
+      "icon": "release/.icon-ico/icon.ico",
       "artifactName": "${productName}-Setup-${version}.${ext}"
     },
     "nsis": {

@@ -26,6 +26,7 @@ interface UseUpdateNotificationReturn {
   handleInstall: () => void;
   handleDismiss: () => void;
   handlePauseResume: () => void;
+  handleCancelDownload: () => void;
 }
 
 /**
@@ -126,18 +127,20 @@ export const useUpdateNotification = (): UseUpdateNotificationReturn => {
     setError(null);
   }, []);
 
+  const handleCancelDownload = useCallback(() => {
+    // Hủy download bằng cách reset states
+    setDownloading(false);
+    setDownloadProgress(0);
+    setIsPaused(false);
+    setError(null);
+    toast(t('update.notification.cancelled', 'Download cancelled'), { icon: '❌' });
+  }, [t]);
+
   const handlePauseResume = useCallback(() => {
     // Note: electron-updater không hỗ trợ pause/resume native
-    // Đây là UI simulation cho UX tốt hơn
-    setIsPaused(prev => {
-      const newPaused = !prev;
-      if (newPaused) {
-        toast(t('update.notification.paused', 'Download paused'), { icon: '⏸️' });
-      } else {
-        toast(t('update.notification.resumed', 'Download resumed'), { icon: '▶️' });
-      }
-      return newPaused;
-    });
+    // Tạm thời disable tính năng này để tránh confusion
+    toast.error(t('update.notification.pauseNotSupported', 'Pause/Resume không được hỗ trợ'));
+    return;
   }, [t]);
 
   return {
@@ -152,5 +155,6 @@ export const useUpdateNotification = (): UseUpdateNotificationReturn => {
     handleInstall,
     handleDismiss,
     handlePauseResume,
+    handleCancelDownload,
   };
 };

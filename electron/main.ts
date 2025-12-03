@@ -1,5 +1,5 @@
 /// <reference types="electron" />
-import { app, BrowserWindow, ipcMain, screen, desktopCapturer, globalShortcut } from 'electron';
+import { app, BrowserWindow, ipcMain, screen, desktopCapturer, globalShortcut, Tray, Menu, nativeImage } from 'electron';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 import { spawn } from 'child_process';
@@ -15,17 +15,30 @@ const __dirname = dirname(__filename);
 
 let mainWindow: BrowserWindow | null = null;
 let overlayWindow: BrowserWindow | null = null;
+let tray: Tray | null = null;
+let isQuitting = false; // Flag để phân biệt đóng cửa sổ và thoát app
 
 function createWindow() {
   const { workArea } = screen.getPrimaryDisplay();
   const desiredWidth = Math.floor(workArea.width * 0.65);
   const desiredHeight = Math.floor(workArea.height * 0.6);
 
+  // Lấy đường dẫn icon
+  const isDevMode = process.env.NODE_ENV === 'development' || !app.isPackaged;
+  const iconPath = isDevMode
+    ? join(__dirname, '../../release/.icon-ico/icon.ico')
+    : join(process.resourcesPath || '', 'icon.ico');
+  
+  console.log('[Icon] Dev mode:', isDevMode);
+  console.log('[Icon] Icon path:', iconPath);
+  console.log('[Icon] __dirname:', __dirname);
+
   mainWindow = new BrowserWindow({
     width: desiredWidth,
     height: desiredHeight,
     minWidth: 900,
     minHeight: 650,
+    icon: iconPath, // Icon cho cửa sổ và taskbar
     webPreferences: {
       nodeIntegration: false,
       contextIsolation: true,
@@ -66,8 +79,103 @@ function createWindow() {
     window.show();
   });
 
+  // Khi đóng cửa sổ, ẩn xuống tray thay vì thoát
+  window.on('close', (event) => {
+    if (!isQuitting) {
+      event.preventDefault();
+      window.hide();
+      
+      // Hiển thị thông báo lần đầu
+      if (tray && !app.isPackaged) {
+        // Có thể thêm balloon notification ở đây nếu muốn
+      }
+    }
+  });
+
   window.on('closed', () => {
     mainWindow = null;
+  });
+}
+
+// Tạo System Tray
+function createTray() {
+  // Sử dụng icon.ico từ thư mục release
+  let trayIcon: Electron.NativeImage;
+  const isDev = process.env.NODE_ENV === 'development' || !app.isPackaged;
+  
+  try {
+    // Các đường dẫn có thể chứa icon
+    const possiblePaths = isDev
+      ? [
+          // Dev mode: đường dẫn tương đối từ dist-electron/electron/
+          join(__dirname, '../../release/.icon-ico/icon.ico'),
+          join(__dirname, '../release/.icon-ico/icon.ico'),
+        ]
+      : [
+          // Production: icon trong resources
+          join(process.resourcesPath || '', 'icon.ico'),
+        ];
+    
+    for (const iconPath of possiblePaths) {
+      try {
+        const icon = nativeImage.createFromPath(iconPath);
+        if (!icon.isEmpty()) {
+          trayIcon = icon;
+          break;
+        }
+      } catch {
+        continue;
+      }
+    }
+    
+    // Không resize - để Windows tự chọn kích thước phù hợp từ file .ico
+    if (!trayIcon! || trayIcon!.isEmpty()) {
+      trayIcon = nativeImage.createEmpty();
+    }
+  } catch {
+    trayIcon = nativeImage.createEmpty();
+  }
+  
+  tray = new Tray(trayIcon!);
+  tray.setToolTip('DALIT - Translation Tool');
+  
+  // Context menu cho tray
+  const contextMenu = Menu.buildFromTemplate([
+    {
+      label: 'Mở DALIT',
+      click: () => {
+        if (mainWindow) {
+          mainWindow.show();
+          mainWindow.focus();
+        }
+      }
+    },
+    {
+      label: 'Chụp màn hình',
+      click: () => {
+        if (mainWindow) {
+          mainWindow.webContents.send('trigger-screen-capture');
+        }
+      }
+    },
+    { type: 'separator' },
+    {
+      label: 'Thoát',
+      click: () => {
+        isQuitting = true;
+        app.quit();
+      }
+    }
+  ]);
+  
+  tray.setContextMenu(contextMenu);
+  
+  // Double-click để mở app
+  tray.on('double-click', () => {
+    if (mainWindow) {
+      mainWindow.show();
+      mainWindow.focus();
+    }
   });
 }
 
@@ -102,6 +210,7 @@ autoUpdater.on('update-downloaded', (info) => {
 
 app.whenReady().then(() => {
   createWindow();
+  createTray(); // Tạo system tray
 
   // Check for updates sau khi app ready (chỉ trong production)
   if (!process.env.NODE_ENV || process.env.NODE_ENV === 'production') {
@@ -113,14 +222,23 @@ app.whenReady().then(() => {
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) {
       createWindow();
+    } else if (mainWindow) {
+      mainWindow.show();
     }
   });
 });
 
+// Xử lý khi thoát app từ tray
+app.on('before-quit', () => {
+  isQuitting = true;
+});
+
 app.on('window-all-closed', () => {
-  if (process.platform !== 'darwin') {
-    app.quit();
+  // Không thoát app khi đóng cửa sổ - app vẫn chạy trong tray
+  if (process.platform === 'darwin') {
+    // macOS: giữ app trong dock
   }
+  // Windows/Linux: app vẫn chạy trong tray
 });
 
 // IPC Handlers
@@ -140,6 +258,25 @@ ipcMain.handle('get-languages', async () => {
 
 ipcMain.handle('get-app-version', () => {
   return app.getVersion();
+});
+
+// IPC handlers cho system tray
+ipcMain.handle('minimize-to-tray', () => {
+  if (mainWindow) {
+    mainWindow.hide();
+  }
+});
+
+ipcMain.handle('show-window', () => {
+  if (mainWindow) {
+    mainWindow.show();
+    mainWindow.focus();
+  }
+});
+
+ipcMain.handle('quit-app', () => {
+  isQuitting = true;
+  app.quit();
 });
 
 // Auto-updater IPC handlers
