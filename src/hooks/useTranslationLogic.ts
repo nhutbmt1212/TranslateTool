@@ -101,7 +101,7 @@ ${JSON.stringify(text)}`;
         try {
             parsed = JSON.parse(cleaned);
         } catch (err) {
-            console.error('Failed to parse Gemini response:', rawText);
+
             throw new Error(t('errors.invalidTranslationResponse'));
         }
 

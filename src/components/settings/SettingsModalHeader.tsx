@@ -1,0 +1,53 @@
+import React from 'react';
+import { useTranslation } from 'react-i18next';
+
+type TabType = 'apiKey' | 'update';
+
+interface SettingsModalHeaderProps {
+  activeTab: TabType;
+  onTabChange: (tab: TabType) => void;
+}
+
+const SettingsModalHeader: React.FC<SettingsModalHeaderProps> = ({
+  activeTab,
+  onTabChange,
+}) => {
+  const { t } = useTranslation();
+
+  return (
+    <>
+      <div className="picker-header">
+        <div>
+          <p className="picker-eyebrow">{t('settings.eyebrow') || 'CONFIGURATION'}</p>
+          <h3>{t('settings.title') || 'Settings'}</h3>
+        </div>
+      </div>
+
+      {/* Tabs */}
+      <div className="settings-tabs">
+        <button
+          className={`settings-tab ${activeTab === 'apiKey' ? 'active' : ''}`}
+          onClick={() => onTabChange('apiKey')}
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4" />
+          </svg>
+          {t('settings.tabs.apiKey') || 'API Key'}
+        </button>
+        <button
+          className={`settings-tab ${activeTab === 'update' ? 'active' : ''}`}
+          onClick={() => onTabChange('update')}
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+            <polyline points="7 10 12 15 17 10" />
+            <line x1="12" y1="15" x2="12" y2="3" />
+          </svg>
+          {t('settings.tabs.update') || 'Update'}
+        </button>
+      </div>
+    </>
+  );
+};
+
+export default SettingsModalHeader;

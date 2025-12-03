@@ -181,11 +181,11 @@ ipcMain.handle('install-update', () => {
 
 // Create overlay window for desktop selection
 function createOverlayWindow(): Promise<{ x: number; y: number; width: number; height: number } | null> {
-  console.log('🖼️ [Overlay] Creating overlay window for region selection');
+
   
   return new Promise((resolve) => {
     const { bounds } = screen.getPrimaryDisplay();
-    console.log('📐 [Overlay] Screen bounds:', bounds);
+
     
     let isResolved = false;
     
@@ -194,11 +194,11 @@ function createOverlayWindow(): Promise<{ x: number; y: number; width: number; h
       if (isResolved) return;
       isResolved = true;
       
-      console.log('🏁 [Overlay] Resolving with result:', result);
+
       
       // Clean up overlay window
       if (overlayWindow && !overlayWindow.isDestroyed()) {
-        console.log('🧹 [Overlay] Cleaning up overlay window');
+
         overlayWindow.removeAllListeners();
         overlayWindow.webContents.removeAllListeners();
         overlayWindow.close();
@@ -208,7 +208,7 @@ function createOverlayWindow(): Promise<{ x: number; y: number; width: number; h
       // Unregister global shortcut
       try {
         globalShortcut.unregister('Escape');
-        console.log('⌨️ [Overlay] Unregistered ESC shortcut');
+
       } catch (e) {
         // Ignore errors when unregistering
       }
@@ -383,7 +383,7 @@ function createOverlayWindow(): Promise<{ x: number; y: number; width: number; h
     // Show and focus window after loading
     overlayWindow.once('ready-to-show', () => {
       if (overlayWindow && !overlayWindow.isDestroyed()) {
-        console.log('👁️ [Overlay] Showing overlay window');
+
         overlayWindow.show();
         overlayWindow.focus();
         overlayWindow.setAlwaysOnTop(true, 'screen-saver');
@@ -391,18 +391,18 @@ function createOverlayWindow(): Promise<{ x: number; y: number; width: number; h
         // Register global ESC shortcut as backup
         try {
           globalShortcut.register('Escape', () => {
-            console.log('⌨️ [Overlay] ESC pressed - cancelling selection');
+
             safeResolve(null);
           });
         } catch (e) {
-          console.log('⚠️ [Overlay] Could not register ESC shortcut:', e);
+
         }
       }
     });
 
     // Handle overlay result
     const overlayResultHandler = async (_event: any, result: any) => {
-      console.log('📨 [Overlay] Received overlay result:', result);
+
       // Remove the handler to prevent multiple calls
       ipcMain.removeListener('overlay-result', overlayResultHandler);
       
@@ -417,13 +417,13 @@ function createOverlayWindow(): Promise<{ x: number; y: number; width: number; h
     ipcMain.once('overlay-result', overlayResultHandler);
 
     overlayWindow.on('closed', () => {
-      console.log('❌ [Overlay] Overlay window closed');
+
       safeResolve(null);
     });
 
     // Timeout as safety net
     setTimeout(() => {
-      console.log('⏰ [Overlay] Selection timeout reached');
+
       safeResolve(null);
     }, 60000); // 60 second timeout
   });
@@ -431,10 +431,10 @@ function createOverlayWindow(): Promise<{ x: number; y: number; width: number; h
 
 // PowerShell Screen Capture Functions
 async function captureWithPowerShell(region: { x: number; y: number; width: number; height: number }): Promise<Buffer> {
-  console.log('🔧 [PowerShell] Starting capture with region:', region);
+
   
   const tempFile = join(tmpdir(), `capture-${Date.now()}.png`);
-  console.log('📁 [PowerShell] Temp file:', tempFile);
+
   
   // Embed PowerShell script directly with parameters substituted
   const powershellScript = `
@@ -485,7 +485,7 @@ catch {
       '-Command', powershellScript
     ];
 
-    console.log('⚡ [PowerShell] Executing embedded script with region:', region);
+
 
     const process = spawn('powershell.exe', args, {
       windowsHide: true,
@@ -504,32 +504,30 @@ catch {
     });
 
     process.on('close', async (code) => {
-      console.log('🏁 [PowerShell] Process finished with code:', code);
-      console.log('📤 [PowerShell] Output:', output);
-      if (error) console.log('⚠️ [PowerShell] Error output:', error);
+
       
       if (code === 0) {
         try {
-          console.log('📖 [PowerShell] Reading captured file');
+
           const buffer = await fs.readFile(tempFile);
-          console.log('✅ [PowerShell] File read successfully, size:', buffer.length);
+
           
           await fs.unlink(tempFile).catch(() => {});
-          console.log('🗑️ [PowerShell] Temp file cleaned up');
+
           
           resolve(buffer);
         } catch (err) {
-          console.error('💥 [PowerShell] Failed to read captured image:', err);
+
           reject(new Error(`Failed to read captured image: ${err}`));
         }
       } else {
-        console.error('💥 [PowerShell] Capture failed with code:', code);
+
         reject(new Error(`PowerShell capture failed: ${error || 'Unknown error'}`));
       }
     });
 
     process.on('error', (err) => {
-      console.error('💥 [PowerShell] Failed to start process:', err);
+
       reject(new Error(`Failed to start PowerShell: ${err.message}`));
     });
   });
@@ -683,42 +681,42 @@ ipcMain.handle('screen-capture:capture-region', async (_event, region: { x: numb
 
 // Desktop selection with overlay
 ipcMain.handle('screen-capture:select-desktop-region', async () => {
-  console.log('🚀 [Electron] Starting desktop region selection');
+
   
   try {
     // Hide main window
     if (mainWindow && !mainWindow.isDestroyed()) {
-      console.log('🙈 [Electron] Hiding main window for capture');
+
       mainWindow.hide();
       // Wait for window to hide
       await new Promise(resolve => setTimeout(resolve, 300));
     }
 
     // Show overlay for selection
-    console.log('🖼️ [Electron] Creating overlay window for selection');
+
     const selectedRegion = await createOverlayWindow();
 
     if (selectedRegion) {
-      console.log('📐 [Electron] Region selected:', selectedRegion);
+
       
       // Wait a bit more to ensure all windows are hidden
       await new Promise(resolve => setTimeout(resolve, 300));
       
       // Capture the selected region with PowerShell
-      console.log('📸 [Electron] Starting PowerShell capture');
+
       const captureResult = await captureWithPowerShell(selectedRegion);
       
-      console.log('✅ [Electron] Capture successful, buffer size:', captureResult.length);
+
       
       // Show main window again after capture
       if (mainWindow && !mainWindow.isDestroyed()) {
-        console.log('👁️ [Electron] Showing main window again');
+
         mainWindow.show();
       }
       
       return captureResult;
     } else {
-      console.log('🚫 [Electron] Selection cancelled by user');
+
       // Show main window again if cancelled
       if (mainWindow && !mainWindow.isDestroyed()) {
         mainWindow.show();
@@ -726,7 +724,7 @@ ipcMain.handle('screen-capture:select-desktop-region', async () => {
       return null; // User cancelled
     }
   } catch (error) {
-    console.error('💥 [Electron] Desktop selection error:', error);
+
     // Show main window again even if failed
     if (mainWindow && !mainWindow.isDestroyed()) {
       mainWindow.show();

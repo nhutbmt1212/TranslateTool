@@ -1,6 +1,7 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Languages } from '../types/languages';
+import { useLanguageSearch } from '../hooks/useLanguageSearch';
 
 type PickerMode = 'source' | 'target';
 
@@ -28,8 +29,21 @@ const LanguagePickerModal: React.FC<LanguagePickerModalProps> = ({
   onSelectTarget,
 }) => {
   const { t } = useTranslation();
-  const [searchTerm, setSearchTerm] = useState('');
   const inputRef = useRef<HTMLInputElement>(null);
+  
+  const autoDetectLabel = t('source.autoDetect', 'Auto detect');
+  const {
+    searchTerm,
+    setSearchTerm,
+    filteredLanguages,
+    clearSearch,
+    sanitizeInput,
+    isLetterKey,
+  } = useLanguageSearch({
+    languages,
+    mode,
+    autoDetectLabel,
+  });
 
   const handleSelect = (code: string) => {
     if (mode === 'source') {
@@ -49,41 +63,12 @@ const LanguagePickerModal: React.FC<LanguagePickerModalProps> = ({
 
   const titleKey = mode === 'source' ? 'languagePicker.titleSource' : 'languagePicker.titleTarget';
 
-  const baseLanguageEntries = useMemo(() => {
-    const entries = Object.entries(languages).sort((a, b) =>
-      a[1].localeCompare(b[1], undefined, { sensitivity: 'base' })
-    );
-
-    if (mode === 'source') {
-      const autoLabel = t('source.autoDetect', 'Auto detect');
-      return [['auto', autoLabel], ...entries];
-    }
-
-    return entries;
-  }, [languages, mode, t]);
-
-  const filteredLanguages = useMemo(() => {
-    const query = searchTerm.trim().toLowerCase();
-    if (!query) {
-      return baseLanguageEntries;
-    }
-
-    return baseLanguageEntries.filter(([code, name]) => {
-      const haystack = `${name} ${code}`.toLowerCase();
-      return haystack.includes(query);
-    });
-  }, [baseLanguageEntries, searchTerm]);
-
-  const sanitizeInput = useCallback((value: string) => value.replace(/[^\p{L}]/gu, ''), []);
-
-  const isLetterKey = useCallback((value: string) => /^\p{L}$/u.test(value), []);
-
   // Clear search term when modal opens
   useEffect(() => {
     if (open) {
-      setSearchTerm('');
+      clearSearch();
     }
-  }, [open]);
+  }, [open, clearSearch]);
 
   useEffect(() => {
     if (!open) return undefined;
@@ -108,7 +93,7 @@ const LanguagePickerModal: React.FC<LanguagePickerModalProps> = ({
         if (isLetterKey(event.key)) {
           event.preventDefault();
           inputRef.current?.focus();
-          setSearchTerm((prev) => sanitizeInput(`${prev}${event.key}`));
+          setSearchTerm((prev: string) => sanitizeInput(`${prev}${event.key}`));
         } else {
           event.preventDefault();
         }
@@ -149,7 +134,7 @@ const LanguagePickerModal: React.FC<LanguagePickerModalProps> = ({
             placeholder={t('languagePicker.searchPlaceholder', 'Search languages...') ?? 'Search languages...'}
           />
           {searchTerm && (
-            <button type="button" onClick={() => setSearchTerm('')} aria-label={t('general.clear', 'Clear')}>
+            <button type="button" onClick={clearSearch} aria-label={t('general.clear', 'Clear')}>
               ✕
             </button>
           )}

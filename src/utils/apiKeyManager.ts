@@ -27,7 +27,7 @@ export class ApiKeyManager {
             localStorage.removeItem(STORAGE_KEY);
             this.cachedKey = apiKey.trim();
         } catch (error) {
-            console.error('Failed to save API key:', error);
+
             throw new Error('Failed to save API key securely');
         }
     }
@@ -65,7 +65,7 @@ export class ApiKeyManager {
             
             return decrypted;
         } catch (error) {
-            console.error('Failed to retrieve API key:', error);
+
             // Không tự động xóa key nữa, chỉ log lỗi
             // User có thể nhập lại key mới nếu cần
             return null;

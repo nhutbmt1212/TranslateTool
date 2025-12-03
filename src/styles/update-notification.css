@@ -120,3 +120,64 @@
   text-align: right;
   margin-top: 4px !important;
 }
+/* Error state */
+.update-notification.update-error {
+  background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
+}
+
+.btn-dismiss {
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+}
+
+.btn-dismiss:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+/* Progress info with pause/resume */
+.progress-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 4px;
+}
+
+.btn-pause-resume {
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 4px 8px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-pause-resume:hover {
+  background: rgba(255, 255, 255, 0.3);
+  transform: scale(1.1);
+}
+
+/* Error boundary fallback */
+.error-boundary-fallback {
+  padding: 20px;
+  border: 1px solid #ff6b6b;
+  border-radius: 8px;
+  background: #fff5f5;
+  color: #c53030;
+  margin: 10px;
+}
+
+.error-boundary-fallback h3 {
+  margin: 0 0 10px 0;
+  color: #c53030;
+}
+
+.error-boundary-fallback details {
+  margin-top: 10px;
+  padding: 10px;
+  background: #fed7d7;
+  border-radius: 4px;
+  font-family: monospace;
+  font-size: 12px;
+}

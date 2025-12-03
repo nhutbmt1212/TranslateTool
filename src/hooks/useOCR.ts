@@ -106,7 +106,7 @@ export const useOCR = () => {
                 detectedLang: parsed.detectedLang || 'auto'
             };
         } catch (e) {
-            console.error("Failed to parse OCR JSON", e);
+
             // Fallback if JSON parsing fails but we have text (unlikely with responseMimeType)
             return {
                 originalText: rawText,

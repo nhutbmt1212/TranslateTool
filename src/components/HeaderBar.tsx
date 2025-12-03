@@ -1,6 +1,7 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { GlobeIcon, ChevronDownIcon, MoonIcon, SunIcon, SettingsIcon } from './icons';
+import { useDropdown } from '../hooks/useDropdown';
 
 interface HeaderBarProps {
   onOpenLanguagePicker: () => void;
@@ -22,21 +23,7 @@ const HeaderBar: React.FC<HeaderBarProps> = ({
   onOpenSettings,
 }) => {
   const { t } = useTranslation();
-  const [uiMenuOpen, setUiMenuOpen] = useState(false);
-  const menuRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
-        setUiMenuOpen(false);
-      }
-    };
-
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, []);
+  const dropdown = useDropdown();
 
   const currentLabel =
     uiLanguageOptions.find((option) => option.code === currentUiLanguage)?.label ||
@@ -44,7 +31,7 @@ const HeaderBar: React.FC<HeaderBarProps> = ({
 
   const handleUiMenuSelect = (code: string) => {
     onUiLanguageChange(code);
-    setUiMenuOpen(false);
+    dropdown.close();
   };
 
   const themeToggleLabel =
@@ -60,13 +47,13 @@ const HeaderBar: React.FC<HeaderBarProps> = ({
         <p className="subtitle">{t('app.subtitle')}</p>
       </div>
       <div className="hero-actions">
-        <div className="hero-select-wrapper" ref={menuRef}>
+        <div className="hero-select-wrapper" ref={dropdown.ref}>
           <button
             type="button"
-            className={`hero-select${uiMenuOpen ? ' open' : ''}`}
-            onClick={() => setUiMenuOpen((open) => !open)}
+            className={`hero-select${dropdown.isOpen ? ' open' : ''}`}
+            onClick={dropdown.toggle}
             aria-haspopup="listbox"
-            aria-expanded={uiMenuOpen}
+            aria-expanded={dropdown.isOpen}
           >
             <span className="hero-select-icon" aria-hidden="true">
               <GlobeIcon size={18} />
@@ -76,7 +63,7 @@ const HeaderBar: React.FC<HeaderBarProps> = ({
               <ChevronDownIcon size={16} />
             </span>
           </button>
-          {uiMenuOpen && (
+          {dropdown.isOpen && (
             <div className="hero-menu" role="listbox">
               {uiLanguageOptions.map((option) => (
                 <button

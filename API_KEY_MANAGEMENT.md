@@ -80,7 +80,7 @@ ApiKeyManager.clearApiKey();
 // Validate format
 const validation = ApiKeyManager.validateApiKeyFormat(apiKey);
 if (!validation.valid) {
-  console.error(validation.error);
+
 }
 
 // Lấy masked key để hiển thị

@@ -1,8 +1,7 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { useTranslation } from 'react-i18next';
-import toast from 'react-hot-toast';
 import { CopyIcon, CheckIcon, SpeakerIcon, SpeakerOffIcon } from './icons';
-import { responsiveVoiceTTS, languageToTTSCode } from '../utils/responsiveVoiceTTS';
+import { useTextToSpeech } from '../hooks/useTextToSpeech';
 
 interface TargetPanelProps {
   targetLang: string;
@@ -24,29 +23,10 @@ const TargetPanel: React.FC<TargetPanelProps> = ({
   copied,
 }) => {
   const { t } = useTranslation();
-  const [isSpeaking, setIsSpeaking] = useState(false);
+  const { isSpeaking, speak } = useTextToSpeech();
 
   const handleSpeak = async () => {
-    if (!outputText) return;
-
-    if (isSpeaking) {
-      responsiveVoiceTTS.stop();
-      setIsSpeaking(false);
-      return;
-    }
-
-    setIsSpeaking(true);
-    
-    try {
-      const ttsLang = languageToTTSCode[targetLang] || targetLang;
-      await responsiveVoiceTTS.speak(outputText, ttsLang);
-    } catch (error) {
-      if (error instanceof Error) {
-        toast.error(error.message);
-      }
-    } finally {
-      setIsSpeaking(false);
-    }
+    await speak(outputText, targetLang);
   };
 
   return (
