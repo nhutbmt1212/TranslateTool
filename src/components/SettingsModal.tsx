@@ -5,7 +5,9 @@ import SettingsModalHeader from './settings/SettingsModalHeader';
 import ApiKeySection from './settings/ApiKeySection';
 import UpdateSection from './settings/UpdateSection';
 import ShortcutsSection from './settings/ShortcutsSection';
+import TextSelectionIgnoreSection from './settings/TextSelectionIgnoreSection';
 import SettingsActions from './settings/SettingsActions';
+import { TabType } from '../types/settings';
 import '../styles/modal.css';
 import '../styles/settings-modal.css';
 
@@ -13,8 +15,6 @@ interface SettingsModalProps {
   open: boolean;
   onClose: () => void;
 }
-
-type TabType = 'apiKey' | 'update' | 'shortcuts';
 
 const SettingsModal: React.FC<SettingsModalProps> = ({ open, onClose }) => {
   const [activeTab, setActiveTab] = useState<TabType>('apiKey');
@@ -52,19 +52,60 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ open, onClose }) => {
     loadAppVersion,
   } = useUpdateSettings();
 
+  // Text Selection Ignore state
+  const [textSelectionConfig, setTextSelectionConfig] = useState({
+    ignoredApplications: [] as string[],
+    enabled: true,
+  });
+  const [isLoadingTextSelection, setIsLoadingTextSelection] = useState(true);
+
   useEffect(() => {
     if (open) {
       loadMaskedKey();
       loadAppVersion();
+      loadTextSelectionConfig();
       setApiKey('');
       setShowKey(false);
     }
   }, [open, loadMaskedKey, loadAppVersion, setApiKey, setShowKey]);
 
+  const loadTextSelectionConfig = async () => {
+    try {
+      const electronAPI = window.electronAPI as any;
+      if (electronAPI?.getTextSelectionIgnoreConfig) {
+        const data = await electronAPI.getTextSelectionIgnoreConfig();
+        setTextSelectionConfig(data);
+      }
+    } catch (error) {
+      console.error('Failed to load text selection ignore config:', error);
+    } finally {
+      setIsLoadingTextSelection(false);
+    }
+  };
+
   const handleSaveAndClose = async () => {
     const success = await handleSave();
     if (success) {
       setTimeout(() => onClose(), 1000);
+    }
+  };
+
+  const handleSaveTextSelectionAndClose = async () => {
+    try {
+      const electronAPI = window.electronAPI as any;
+      if (electronAPI?.saveTextSelectionIgnoreConfig) {
+        await electronAPI.saveTextSelectionIgnoreConfig(textSelectionConfig);
+        
+        // Reload config in text selection monitoring
+        if (electronAPI?.textSelectionPopup?.reloadIgnoreConfig) {
+          await electronAPI.textSelectionPopup.reloadIgnoreConfig();
+        }
+        
+        setTimeout(() => onClose(), 500);
+      }
+    } catch (error) {
+      console.error('Failed to save text selection config:', error);
+      alert('Failed to save configuration');
     }
   };
 
@@ -108,19 +149,27 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ open, onClose }) => {
           )}
 
           {activeTab === 'shortcuts' && <ShortcutsSection />}
+
+          {activeTab === 'textSelectionIgnore' && (
+            <TextSelectionIgnoreSection
+              config={textSelectionConfig}
+              setConfig={setTextSelectionConfig}
+              isLoading={isLoadingTextSelection}
+            />
+          )}
         </div>
 
         {/* Actions - Always at bottom */}
         <SettingsActions
           activeTab={activeTab}
-          isLoading={isLoading}
+          isLoading={activeTab === 'textSelectionIgnore' ? isLoadingTextSelection : isLoading}
           apiKey={apiKey}
           updateReady={updateReady}
           updateAvailable={updateAvailable}
           downloading={downloading}
           checkingUpdate={checkingUpdate}
           updateInfo={updateInfo}
-          onSave={handleSaveAndClose}
+          onSave={activeTab === 'textSelectionIgnore' ? handleSaveTextSelectionAndClose : handleSaveAndClose}
           onClose={onClose}
           onInstallUpdate={handleInstallUpdate}
           onDownloadUpdate={() => handleDownloadUpdate(false)}

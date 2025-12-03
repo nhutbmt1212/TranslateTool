@@ -1,7 +1,6 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
-
-type TabType = 'apiKey' | 'update' | 'shortcuts';
+import { TabType } from '../../types/settings';
 
 interface SettingsModalHeaderProps {
   activeTab: TabType;
@@ -54,6 +53,16 @@ const SettingsModalHeader: React.FC<SettingsModalHeaderProps> = ({
             <path d="M6 8h.001M10 8h.001M14 8h.001M18 8h.001M8 12h.001M12 12h.001M16 12h.001M6 16h12" />
           </svg>
           {t('settings.tabs.shortcuts') || 'Shortcuts'}
+        </button>
+        <button
+          className={`settings-tab ${activeTab === 'textSelectionIgnore' ? 'active' : ''}`}
+          onClick={() => onTabChange('textSelectionIgnore')}
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z" />
+            <line x1="2" y1="2" x2="22" y2="22" />
+          </svg>
+          {t('settings.tabs.textSelectionIgnore') || 'Text Selection'}
         </button>
       </div>
     </>

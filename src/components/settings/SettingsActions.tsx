@@ -1,7 +1,6 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
-
-type TabType = 'apiKey' | 'update' | 'shortcuts';
+import { TabType } from '../../types/settings';
 
 interface UpdateInfo {
   version: string;
@@ -85,6 +84,43 @@ const SettingsActions: React.FC<SettingsActionsProps> = ({
           className="settings-cancel-button"
           onClick={onClose}
           style={{ flex: 1 }}
+        >
+          {t('settings.close') || 'Close'}
+        </button>
+      </div>
+    );
+  }
+
+  if (activeTab === 'textSelectionIgnore') {
+    return (
+      <div className="settings-actions">
+        <button
+          type="button"
+          className="settings-save-button"
+          onClick={onSave}
+          disabled={isLoading}
+        >
+          {isLoading ? (
+            <>
+              <span className="button-spinner" />
+              {t('settings.saving') || 'Saving...'}
+            </>
+          ) : (
+            <>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" />
+                <polyline points="17 21 17 13 7 13 7 21" />
+                <polyline points="7 3 7 8 15 8" />
+              </svg>
+              {t('settings.save') || 'Save'}
+            </>
+          )}
+        </button>
+        <button
+          type="button"
+          className="settings-cancel-button"
+          onClick={onClose}
+          disabled={isLoading}
         >
           {t('settings.close') || 'Close'}
         </button>
