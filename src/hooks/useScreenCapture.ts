@@ -1,5 +1,6 @@
 import { useCallback, useState } from 'react';
 import toast from 'react-hot-toast';
+import { extractTextFromImage } from '../utils/geminiOCR';
 
 interface UseScreenCaptureReturn {
   isCapturing: boolean;
@@ -7,13 +8,6 @@ interface UseScreenCaptureReturn {
   error: string | null;
 }
 
-/**
- * Custom hook để quản lý screen capture functionality
- * - Quản lý capturing state và error state
- * - Handle screen capture process với proper error handling
- * - Extract text từ captured image sử dụng OCR
- * - Tối ưu performance và cleanup
- */
 export const useScreenCapture = (): UseScreenCaptureReturn => {
   const [isCapturing, setIsCapturing] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -55,14 +49,8 @@ export const useScreenCapture = (): UseScreenCaptureReturn => {
           const blob = new Blob([uint8Array], { type: 'image/png' });
           const file = new File([blob], 'screen-capture.png', { type: 'image/png' });
           
-          // Dynamic import OCR function
-          const { detectAndTranslateText } = await import('../utils/imageTranslator');
-          
-          // Perform OCR only (no translation yet)
-          const ocrResult = await detectAndTranslateText('', 'auto', 'en', undefined, undefined, file);
-          
-          // Extract all text from regions
-          const extractedText = ocrResult.regions.map(region => region.text).join(' ').trim();
+          // Use shared Gemini OCR utility
+          const extractedText = await extractTextFromImage(file);
           
           toast.dismiss(processingToast);
           

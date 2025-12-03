@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Toaster } from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
 import languagesMetadata from './data/languages.json';
@@ -15,6 +15,7 @@ import { Languages, LanguageMetadata } from './types/languages';
 import { uiLanguageOptions } from './i18n';
 import { useOCR } from './hooks/useOCR';
 import { useTranslationLogic } from './hooks/useTranslationLogic';
+import { useScreenCapture } from './hooks/useScreenCapture';
 import './styles/screen-capture.css';
 
 interface TranslationResult {
@@ -63,6 +64,9 @@ declare global {
         captureRegion: (region: { x: number; y: number; width: number; height: number }) => Promise<Buffer>;
         selectDesktopRegion: () => Promise<Buffer | null>;
       };
+      
+      // Global shortcut event listener
+      onTriggerScreenCapture?: (callback: () => void) => () => void;
     };
   }
 }
@@ -127,6 +131,34 @@ const App: React.FC = () => {
     setDetectedLang,
     setOutputText
   );
+
+  // Hook cho screen capture từ global shortcut
+  const { captureScreen } = useScreenCapture();
+
+  // Handler cho global shortcut trigger-screen-capture
+  const handleGlobalScreenCapture = useCallback(async () => {
+    if (isTranslating || isProcessingOCR) return;
+    
+    const extractedText = await captureScreen();
+    if (extractedText) {
+      setInputText(extractedText);
+      // Auto translate after capturing
+      handleTranslate(extractedText, extractedText);
+    }
+  }, [captureScreen, isTranslating, isProcessingOCR, handleTranslate]);
+
+  // Listen for global shortcut from main process
+  useEffect(() => {
+    const api = window.electronAPI;
+    if (!api?.onTriggerScreenCapture) return;
+
+    const cleanup = api.onTriggerScreenCapture(() => {
+      console.log('[App] Received trigger-screen-capture event');
+      handleGlobalScreenCapture();
+    });
+
+    return cleanup;
+  }, [handleGlobalScreenCapture]);
 
   const openLanguagePicker = (mode: 'source' | 'target') => {
     setLanguagePickerMode(mode);

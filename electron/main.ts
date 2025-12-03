@@ -212,6 +212,20 @@ app.whenReady().then(() => {
   createWindow();
   createTray(); // Tạo system tray
 
+  // Đăng ký global shortcut Ctrl+Shift+0 cho Quick Screen Capture
+  const shortcutRegistered = globalShortcut.register('CommandOrControl+Shift+0', () => {
+    console.log('[Shortcut] Ctrl+Shift+0 pressed - triggering screen capture');
+    if (mainWindow) {
+      mainWindow.webContents.send('trigger-screen-capture');
+    }
+  });
+  
+  if (shortcutRegistered) {
+    console.log('[Shortcut] Ctrl+Shift+0 registered successfully');
+  } else {
+    console.log('[Shortcut] Failed to register Ctrl+Shift+0');
+  }
+
   // Check for updates sau khi app ready (chỉ trong production)
   if (!process.env.NODE_ENV || process.env.NODE_ENV === 'production') {
     setTimeout(() => {
@@ -226,6 +240,11 @@ app.whenReady().then(() => {
       mainWindow.show();
     }
   });
+});
+
+// Hủy đăng ký shortcut khi app thoát
+app.on('will-quit', () => {
+  globalShortcut.unregisterAll();
 });
 
 // Xử lý khi thoát app từ tray
