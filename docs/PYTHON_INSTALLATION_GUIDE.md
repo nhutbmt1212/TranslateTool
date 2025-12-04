@@ -14,8 +14,6 @@ DALIT sử dụng **EasyOCR** (Python) để nhận dạng chữ trong ảnh ch�
 ### Bước 2: Cài đặt
 ⚠️ **QUAN TRỌNG**: Tích chọn **"Add Python to PATH"** trước khi cài!
 
-![Python Installation](https://docs.python.org/3/_images/win_installer.png)
-
 ### Bước 3: Kiểm tra
 Mở Command Prompt và chạy:
 ```cmd
