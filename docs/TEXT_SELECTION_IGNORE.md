@@ -50,9 +50,3 @@ To ignore text selection in:
 - **Firefox**: Add `firefox.exe` or just `firefox`
 - **Sublime Text**: Add `sublime_text.exe` or just `sublime_text`
 - **Any Electron app**: Add the app's executable name
-
-## Implementation Files
-- `electron/lib/textSelectionPopup.ts` - Main logic for text selection monitoring and ignore checking
-- `src/components/settings/TextSelectionIgnoreSection.tsx` - Settings UI component
-- `electron/lib/ipcHandlers.ts` - IPC handlers for loading/saving config
-- `src/data/textSelectionIgnore.json` - Default config (not used at runtime, just for reference)
